@@ -57,7 +57,7 @@ export default function YamsScoreSheet({ sessionId }: YamsScoreSheetProps) {
   const [session, setSession] = useState<GameSession | null>(null);
   const [currentScores, setCurrentScores] = useState<{ [key: string]: { [playerId: number]: string } }>({});
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  // Removed saving state - using optimistic updates for instant feedback
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
 
   const fetchSession = useCallback(async () => {
@@ -104,8 +104,44 @@ export default function YamsScoreSheet({ sessionId }: YamsScoreSheetProps) {
     const score = fixedScore !== undefined ? fixedScore.toString() : currentScores[categoryId]?.[playerId];
     if (score === undefined || score === '') return;
 
-    setSaving(true);
+    const scoreValue = parseInt(score) || 0;
 
+    // 🚀 OPTIMISTIC UPDATE - Update UI immediately for instant feedback
+    setSession(prev => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        scores: {
+          ...prev.scores,
+          [categoryId]: {
+            ...prev.scores[categoryId],
+            [playerId]: scoreValue
+          }
+        }
+      };
+    });
+    
+    // Clear the input field immediately
+    setCurrentScores(prev => ({
+      ...prev,
+      [categoryId]: {
+        ...prev[categoryId],
+        [playerId]: ''
+      }
+    }));
+    
+    // Move to next player immediately
+    if (session) {
+      const playerIds = session.players.map(p => p.id);
+      const currentIndex = playerIds.indexOf(playerId);
+      if (currentIndex !== -1 && currentIndex < playerIds.length - 1) {
+        setCurrentPlayerIndex(currentIndex + 1);
+      } else {
+        setCurrentPlayerIndex(0);
+      }
+    }
+
+    // 🔄 ASYNC BACKGROUND SAVE - Fire and forget with error handling
     try {
       const response = await fetch(`/api/games/yams/sessions/${sessionId}/scores`, {
         method: 'POST',
@@ -115,12 +151,13 @@ export default function YamsScoreSheet({ sessionId }: YamsScoreSheetProps) {
         body: JSON.stringify({
           categoryId,
           playerId,
-          score: parseInt(score) || 0
+          score: scoreValue
         }),
       });
 
-      if (response.ok) {
-        // Update local state instead of refetching everything
+      if (!response.ok) {
+        // 🚨 Revert optimistic update on error
+        const data = await response.json();
         setSession(prev => {
           if (!prev) return prev;
           return {
@@ -129,39 +166,30 @@ export default function YamsScoreSheet({ sessionId }: YamsScoreSheetProps) {
               ...prev.scores,
               [categoryId]: {
                 ...prev.scores[categoryId],
-                [playerId]: parseInt(score) || 0
+                [playerId]: undefined // Remove the failed score
               }
             }
           };
         });
-        
-        // Clear the input field for this score
-        setCurrentScores(prev => ({
-          ...prev,
-          [categoryId]: {
-            ...prev[categoryId],
-            [playerId]: ''
-          }
-        }));
-        
-        // Move to next player
-        if (session) {
-          const playerIds = session.players.map(p => p.id);
-          const currentIndex = playerIds.indexOf(playerId);
-          if (currentIndex !== -1 && currentIndex < playerIds.length - 1) {
-            setCurrentPlayerIndex(currentIndex + 1);
-          } else {
-            setCurrentPlayerIndex(0);
-          }
-        }
-      } else {
-        const data = await response.json();
-        alert(data.error || 'Erreur lors de la sauvegarde');
+        alert(data.error || 'Erreur lors de la sauvegarde - score annulé');
       }
+      // ✅ Success - no action needed, optimistic update is already done
     } catch (error) {
-      alert('Erreur de connexion');
-    } finally {
-      setSaving(false);
+      // 🚨 Network error - revert optimistic update
+      setSession(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          scores: {
+            ...prev.scores,
+            [categoryId]: {
+              ...prev.scores[categoryId],
+              [playerId]: undefined // Remove the failed score
+            }
+          }
+        };
+      });
+      alert('Erreur de connexion - score annulé');
     }
   };
 
@@ -300,7 +328,7 @@ export default function YamsScoreSheet({ sessionId }: YamsScoreSheetProps) {
                                     />
                                     <button
                                       onClick={() => saveScore(category.id, player.id)}
-                                      disabled={saving || !currentScores[category.id]?.[player.id]}
+                                      disabled={!currentScores[category.id]?.[player.id]}
                                       className="p-1 text-green-600 hover:text-green-800 disabled:opacity-50 dark:text-green-400 dark:hover:text-green-300"
                                     >
                                       <Save className="h-4 w-4" />
@@ -368,12 +396,12 @@ export default function YamsScoreSheet({ sessionId }: YamsScoreSheetProps) {
                                               saveScore(category.id, player.id, category.fixedScore);
                                             }
                                           }}
-                                          disabled={saving}
+                                          disabled={false}
                                           className="h-5 w-5 text-green-600 focus:ring-green-500 border-gray-300 rounded dark:bg-gray-700 dark:border-gray-600"
                                         />
                                         <button
                                           onClick={() => saveScore(category.id, player.id, 0)}
-                                          disabled={saving}
+                                          disabled={false}
                                           className="p-1 text-red-600 hover:text-red-800 disabled:opacity-50 dark:text-red-400 dark:hover:text-red-300"
                                           title="Rayer (0 points)"
                                         >
@@ -392,7 +420,7 @@ export default function YamsScoreSheet({ sessionId }: YamsScoreSheetProps) {
                                         />
                                         <button
                                           onClick={() => saveScore(category.id, player.id)}
-                                          disabled={saving || !currentScores[category.id]?.[player.id]}
+                                          disabled={!currentScores[category.id]?.[player.id]}
                                           className="p-1 text-green-600 hover:text-green-800 disabled:opacity-50 dark:text-green-400 dark:hover:text-green-300"
                                         >
                                           <Save className="h-4 w-4" />

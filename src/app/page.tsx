@@ -8,19 +8,27 @@ export default function HomePage() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    console.log('HomePage: Setting mounted to true');
     setMounted(true);
   }, []);
 
   useEffect(() => {
-    if (!mounted) return;
+    if (!mounted) {
+      console.log('HomePage: Not mounted yet, skipping auth check');
+      return;
+    }
     
+    console.log('HomePage: Checking authentication, cookies:', document.cookie);
     const token = document.cookie
       .split('; ')
       .find(row => row.startsWith('auth-token='));
 
+    console.log('HomePage: Auth token found:', !!token);
     if (token) {
+      console.log('HomePage: Redirecting to dashboard');
       router.push('/dashboard');
     } else {
+      console.log('HomePage: Redirecting to login');
       router.push('/auth/login');
     }
   }, [router, mounted]);

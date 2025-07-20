@@ -16,15 +16,19 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    console.log('ThemeProvider: Initializing theme');
     const savedTheme = localStorage.getItem('theme') as Theme;
     const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     const initialTheme = savedTheme || systemTheme;
+    console.log('ThemeProvider: Initial theme determined:', initialTheme);
     setTheme(initialTheme);
     setMounted(true);
+    console.log('ThemeProvider: Mounted state set to true');
   }, []);
 
   useEffect(() => {
     if (mounted) {
+      console.log('ThemeProvider: Applying theme:', theme);
       localStorage.setItem('theme', theme);
       document.documentElement.classList.toggle('dark', theme === 'dark');
     }
@@ -35,8 +39,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   };
 
   if (!mounted) {
+    console.log('ThemeProvider: Not mounted yet, showing loading state');
     return <div suppressHydrationWarning className="min-h-screen bg-gray-50">{children}</div>;
   }
+
+  console.log('ThemeProvider: Fully mounted, rendering with theme:', theme);
 
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme }}>

@@ -2,13 +2,35 @@
 
 ## Commandes de test systématiques
 
-Avant de terminer toute modification de code, toujours exécuter :
+Avant de terminer toute modification de code, toujours exécuter dans cet ordre :
 
 ```bash
+# 1. Tests unitaires et d'intégration
+npm test
+
+# 2. Vérification ESLint et TypeScript
 npm run lint
 ```
 
-Cette commande permet de détecter les erreurs ESLint et TypeScript qui doivent être corrigées.
+### Tests disponibles
+
+```bash
+# Lancer tous les tests une fois
+npm test
+
+# Lancer les tests en mode watch (recommandé pendant le développement)
+npm run test:watch
+
+# Lancer les tests avec rapport de couverture
+npm run test:coverage
+```
+
+### Structure des tests
+
+- **Tests d'API** : `src/__tests__/api/` - Testent les routes API critiques
+- **Tests de composants** : `src/__tests__/components/` - Testent les composants React
+- **Tests d'intégration** : `src/__tests__/integration/` - Testent la base de données
+- **Tests utilitaires** : `src/__tests__/lib/` - Testent les fonctions utilitaires
 
 ## Gestion des versions
 
@@ -31,12 +53,23 @@ npm run version:major
 - Elle est récupérée depuis le `package.json`
 - Le composant `VersionFooter` gère l'affichage
 
+### Tests critiques à vérifier
+
+Ces tests doivent TOUJOURS passer après chaque modification :
+
+1. **API Games** (`/api/games`) - Récupération des jeux
+2. **API Sessions** (`/api/games/[slug]/sessions`) - Création de parties
+3. **ThemeProvider** - Gestion des thèmes sans erreur d'hydratation  
+4. **Authentification** - Validation des tokens JWT
+5. **Base de données** - CRUD des sessions, joueurs et scores
+
 ### Processus recommandé
 1. Faire les modifications de code
-2. Tester avec `npm run lint`
-3. Incrémenter la version appropriée
-4. Commiter les changements
-5. Déployer
+2. Lancer les tests : `npm test`
+3. Vérifier ESLint : `npm run lint`
+4. Incrémenter la version appropriée
+5. Commiter les changements
+6. Déployer
 
 ## Notes sur le projet
 

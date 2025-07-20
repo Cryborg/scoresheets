@@ -100,7 +100,22 @@ export async function POST(
       hasScoreTarget && finishCurrentRound ? 1 : 0,  // Convert boolean to 0/1
       game.score_direction || 'higher'
     );
-    const sessionId = sessionResult.lastInsertRowid;
+    
+    console.log('[PROD] Session result:', JSON.stringify(sessionResult, null, 2));
+    
+    // Handle different formats of lastInsertRowid from Turso
+    let sessionId = sessionResult.lastInsertRowid;
+    if (typeof sessionId === 'bigint') {
+      sessionId = Number(sessionId);
+    }
+    if (!sessionId || isNaN(sessionId)) {
+      console.error('[PROD] Invalid session ID:', sessionId, 'Result:', sessionResult);
+      return NextResponse.json(
+        { error: 'Erreur lors de la création de la session' },
+        { status: 500 }
+      );
+    }
+    
     console.log('[PROD] Session created with ID:', sessionId);
 
     // Add players

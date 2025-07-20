@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import { act } from 'react';
-import { ThemeProvider, useTheme } from '@/components/ThemeProvider';
+import { ThemeProvider, useTheme } from '../../components/ThemeProvider';
 
 // Test component to use the theme context
 function TestComponent() {
@@ -17,6 +17,16 @@ describe('ThemeProvider', () => {
   beforeEach(() => {
     localStorage.clear();
     localStorage.getItem = jest.fn().mockReturnValue(null); // Force no saved theme
+    localStorage.setItem = jest.fn();
+    // Force light theme from system preference
+    window.matchMedia = jest.fn().mockImplementation(query => ({
+      matches: false, // Always return false for dark mode
+      media: query,
+      onchange: null,
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
+      dispatchEvent: jest.fn(),
+    }));
     jest.clearAllMocks();
   });
 
@@ -118,6 +128,8 @@ describe('ThemeProvider', () => {
   });
 
   it('should save theme to localStorage when changed', async () => {
+    const setItemSpy = jest.spyOn(Storage.prototype, 'setItem');
+    
     render(
       <ThemeProvider>
         <TestComponent />
@@ -135,8 +147,10 @@ describe('ThemeProvider', () => {
     });
 
     await waitFor(() => {
-      expect(localStorage.setItem).toHaveBeenCalledWith('theme', 'dark');
+      expect(setItemSpy).toHaveBeenCalledWith('theme', 'dark');
     });
+    
+    setItemSpy.mockRestore();
   });
 
   it('should throw error when useTheme is used outside provider', () => {

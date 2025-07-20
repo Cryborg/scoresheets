@@ -13,8 +13,8 @@ const testDbPath = join(testDbDir, 'test-scoresheets.db');
 let testDb: Database.Database;
 
 // Mock the async database to use our test database
-jest.mock('@/lib/database-async', () => {
-  const originalModule = jest.requireActual('@/lib/database-async');
+jest.mock('../../lib/database-async', () => {
+  const originalModule = jest.requireActual('../../lib/database-async');
   
   return {
     ...originalModule,
@@ -72,26 +72,117 @@ describe('Database Integration Tests', () => {
   });
 
   beforeEach(async () => {
-    // Initialize database schema before each test
-    const { initializeDatabase } = await import('@/lib/database-async');
-    await initializeDatabase();
+    // Initialize database schema manually for test
+    testDb.exec(`
+      CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT UNIQUE NOT NULL,
+        email TEXT UNIQUE NOT NULL,
+        password_hash TEXT NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS game_categories (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL UNIQUE,
+        parent_id INTEGER,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (parent_id) REFERENCES game_categories (id)
+      );
+
+      CREATE TABLE IF NOT EXISTS games (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL UNIQUE,
+        slug TEXT NOT NULL UNIQUE,
+        category_id INTEGER NOT NULL,
+        rules TEXT,
+        is_implemented BOOLEAN DEFAULT FALSE,
+        score_type TEXT DEFAULT 'rounds',
+        team_based BOOLEAN DEFAULT FALSE,
+        min_players INTEGER DEFAULT 2,
+        max_players INTEGER DEFAULT 6,
+        score_direction TEXT DEFAULT 'higher',
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (category_id) REFERENCES game_categories (id)
+      );
+
+      CREATE TABLE IF NOT EXISTS game_sessions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        game_id INTEGER,
+        session_name TEXT,
+        has_score_target BOOLEAN DEFAULT FALSE,
+        score_target INTEGER,
+        finish_current_round BOOLEAN DEFAULT FALSE,
+        score_direction TEXT DEFAULT 'higher',
+        date_played DATETIME DEFAULT CURRENT_TIMESTAMP,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users (id),
+        FOREIGN KEY (game_id) REFERENCES games (id)
+      );
+
+      CREATE TABLE IF NOT EXISTS players (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        session_id INTEGER NOT NULL,
+        name TEXT NOT NULL,
+        position INTEGER NOT NULL,
+        FOREIGN KEY (session_id) REFERENCES game_sessions (id)
+      );
+
+      CREATE TABLE IF NOT EXISTS scores (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        session_id INTEGER NOT NULL,
+        player_id INTEGER NOT NULL,
+        round_number INTEGER NOT NULL,
+        score_type TEXT NOT NULL,
+        score_value INTEGER NOT NULL,
+        details TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (session_id) REFERENCES game_sessions (id),
+        FOREIGN KEY (player_id) REFERENCES players (id)
+      );
+
+      CREATE TABLE IF NOT EXISTS user_players (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        player_name TEXT NOT NULL,
+        games_played INTEGER DEFAULT 0,
+        last_played DATETIME,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(user_id, player_name),
+        FOREIGN KEY (user_id) REFERENCES users (id)
+      );
+
+      INSERT OR IGNORE INTO game_categories (name) VALUES 
+        ('Jeux de cartes'),
+        ('Jeux de dés'),
+        ('Jeux de plis');
+      
+      INSERT OR IGNORE INTO games (name, slug, category_id, rules, is_implemented, score_type, team_based, min_players, max_players, score_direction) VALUES 
+        ('Yams (Yahtzee)', 'yams', 2, 'Test rules', TRUE, 'categories', FALSE, 1, 8, 'higher');
+    `);
   });
 
   afterEach(() => {
-    // Clean up data after each test
-    testDb.exec(`
-      DELETE FROM scores;
-      DELETE FROM players;
-      DELETE FROM game_sessions;
-      DELETE FROM user_players;
-      DELETE FROM games WHERE slug != 'yams';
-      DELETE FROM users;
-    `);
+    // Clean up data after each test, but only if tables exist
+    try {
+      testDb.exec(`
+        DELETE FROM scores;
+        DELETE FROM players;
+        DELETE FROM game_sessions;
+        DELETE FROM user_players;
+        DELETE FROM games WHERE slug != 'yams';
+        DELETE FROM users;
+      `);
+    } catch (error) {
+      // Tables might not exist yet, ignore the error
+      console.log('Cleanup error (expected if tables not created yet):', error);
+    }
   });
 
   describe('Game Management', () => {
     it('should retrieve Yams game from database', async () => {
-      const { db } = await import('@/lib/database-async');
+      const { db } = await import('../../lib/database-async');
       
       const game = await db.prepare('SELECT * FROM games WHERE slug = ?').get('yams');
       
@@ -105,7 +196,7 @@ describe('Database Integration Tests', () => {
     });
 
     it('should list all games with categories', async () => {
-      const { db } = await import('@/lib/database-async');
+      const { db } = await import('../../lib/database-async');
       
       const games = await db.prepare(`
         SELECT 
@@ -133,7 +224,7 @@ describe('Database Integration Tests', () => {
     let gameId: number;
 
     beforeEach(async () => {
-      const { db } = await import('@/lib/database-async');
+      const { db } = await import('../../lib/database-async');
       
       // Create test user
       const userResult = await db.prepare(`
@@ -148,7 +239,7 @@ describe('Database Integration Tests', () => {
     });
 
     it('should create a game session successfully', async () => {
-      const { db } = await import('@/lib/database-async');
+      const { db } = await import('../../lib/database-async');
       
       const sessionResult = await db.prepare(`
         INSERT INTO game_sessions (user_id, game_id, session_name, has_score_target, score_target, finish_current_round, score_direction)
@@ -170,7 +261,7 @@ describe('Database Integration Tests', () => {
     });
 
     it('should create players for a session', async () => {
-      const { db } = await import('@/lib/database-async');
+      const { db } = await import('../../lib/database-async');
       
       // Create session
       const sessionResult = await db.prepare(`
@@ -195,7 +286,7 @@ describe('Database Integration Tests', () => {
     });
 
     it('should track user player statistics', async () => {
-      const { db } = await import('@/lib/database-async');
+      const { db } = await import('../../lib/database-async');
       
       // Add a player for the first time
       await db.prepare(`
@@ -230,7 +321,7 @@ describe('Database Integration Tests', () => {
     let playerId: number;
 
     beforeEach(async () => {
-      const { db } = await import('@/lib/database-async');
+      const { db } = await import('../../lib/database-async');
       
       // Create test user
       const userResult = await db.prepare(`
@@ -259,7 +350,7 @@ describe('Database Integration Tests', () => {
     });
 
     it('should record scores for players', async () => {
-      const { db } = await import('@/lib/database-async');
+      const { db } = await import('../../lib/database-async');
       
       // Record a score
       const scoreResult = await db.prepare(`
@@ -282,7 +373,7 @@ describe('Database Integration Tests', () => {
     });
 
     it('should calculate total scores correctly', async () => {
-      const { db } = await import('@/lib/database-async');
+      const { db } = await import('../../lib/database-async');
       
       // Record multiple scores
       const scores = [

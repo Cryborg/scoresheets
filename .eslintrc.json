@@ -1,8 +1,68 @@
 {
-  "extends": "next/core-web-vitals",
+  "extends": [
+    "next/core-web-vitals",
+    "@typescript-eslint/recommended",
+    "plugin:import/recommended",
+    "plugin:import/typescript"
+  ],
+  "parser": "@typescript-eslint/parser",
+  "plugins": ["@typescript-eslint", "import", "unused-imports"],
+  "settings": {
+    "import/resolver": {
+      "typescript": {
+        "alwaysTryTypes": true
+      }
+    }
+  },
   "rules": {
-    "@typescript-eslint/no-explicit-any": "off",
-    "@typescript-eslint/no-unused-vars": "warn",
-    "react/no-unescaped-entities": "off"
-  }
+    "@typescript-eslint/no-explicit-any": "warn",
+    "@typescript-eslint/no-unused-vars": "off",
+    "@typescript-eslint/no-unsafe-function-type": "warn",
+    "@typescript-eslint/ban-ts-comment": "warn",
+    "@typescript-eslint/no-require-imports": "warn",
+    "@typescript-eslint/prefer-const": "warn",
+    "@typescript-eslint/no-inferrable-types": "warn",
+    "unused-imports/no-unused-imports": "warn",
+    "unused-imports/no-unused-vars": [
+      "warn",
+      {
+        "vars": "all",
+        "varsIgnorePattern": "^_",
+        "args": "after-used",
+        "argsIgnorePattern": "^_"
+      }
+    ],
+    "import/order": [
+      "warn",
+      {
+        "groups": [
+          "builtin",
+          "external",
+          "internal",
+          "parent",
+          "sibling",
+          "index"
+        ],
+        "newlines-between": "always",
+        "alphabetize": {
+          "order": "asc",
+          "caseInsensitive": true
+        }
+      }
+    ],
+    "import/no-duplicates": "warn",
+    "import/no-unused-modules": "warn",
+    "react/no-unescaped-entities": "off",
+    "prefer-const": "warn",
+    "no-var": "error",
+    "no-console": "warn",
+    "no-debugger": "error",
+    "no-alert": "warn"
+  },
+  "ignorePatterns": [
+    ".next/**/*",
+    "node_modules/**/*",
+    "dist/**/*",
+    "build/**/*"
+  ]
 }

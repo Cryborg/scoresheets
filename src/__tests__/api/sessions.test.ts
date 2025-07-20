@@ -3,10 +3,10 @@
  */
 
 import { NextRequest } from 'next/server';
-import { POST } from '@/app/api/games/[slug]/sessions/route';
+import { POST } from '../../app/api/games/[slug]/sessions/route';
 
 // Mock authentication
-jest.mock('@/lib/auth', () => ({
+jest.mock('../../lib/auth', () => ({
   getAuthenticatedUserId: jest.fn().mockReturnValue(1),
   unauthorizedResponse: jest.fn().mockReturnValue(
     new Response(JSON.stringify({ error: 'Non autorisé' }), { status: 401 })
@@ -17,7 +17,7 @@ jest.mock('@/lib/auth', () => ({
 const mockSessionResult = { lastInsertRowid: 123, changes: 1 };
 const mockPlayerResult = { lastInsertRowid: 456, changes: 1 };
 
-jest.mock('@/lib/database-async', () => ({
+jest.mock('../../lib/database-async', () => ({
   db: {
     prepare: jest.fn().mockImplementation((sql: string) => {
       if (sql.includes('SELECT * FROM games')) {
@@ -94,7 +94,7 @@ describe('/api/games/[slug]/sessions', () => {
     });
 
     it('should reject unauthenticated requests', async () => {
-      const { getAuthenticatedUserId } = await import('@/lib/auth');
+      const { getAuthenticatedUserId } = await import('../../lib/auth');
       jest.mocked(getAuthenticatedUserId).mockReturnValue(null);
 
       const requestBody = {
@@ -115,6 +115,9 @@ describe('/api/games/[slug]/sessions', () => {
     });
 
     it('should reject invalid player count', async () => {
+      // Reset the auth mock to ensure authentication passes
+      const { getAuthenticatedUserId } = await import('../../lib/auth');
+      jest.mocked(getAuthenticatedUserId).mockReturnValue(1);
       const requestBody = {
         sessionName: 'Test Session',
         players: [], // Empty players array
@@ -140,7 +143,10 @@ describe('/api/games/[slug]/sessions', () => {
     });
 
     it('should handle non-existent game', async () => {
-      const { db } = await import('@/lib/database-async');
+      // Reset the auth mock to ensure authentication passes
+      const { getAuthenticatedUserId } = await import('../../lib/auth');
+      jest.mocked(getAuthenticatedUserId).mockReturnValue(1);
+      const { db } = await import('../../lib/database-async');
       jest.mocked(db.prepare).mockImplementation((sql: string) => {
         if (sql.includes('SELECT * FROM games')) {
           return {

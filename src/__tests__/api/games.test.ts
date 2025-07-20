@@ -3,10 +3,10 @@
  */
 
 import { NextRequest } from 'next/server';
-import { GET } from '@/app/api/games/route';
+import { GET } from '../../app/api/games/route';
 
 // Mock database
-jest.mock('@/lib/database-async', () => ({
+jest.mock('../../lib/database-async', () => ({
   db: {
     prepare: jest.fn().mockReturnValue({
       all: jest.fn().mockResolvedValue([
@@ -60,7 +60,7 @@ describe('/api/games', () => {
     });
 
     it('should handle database errors gracefully', async () => {
-      const { db } = await import('@/lib/database-async');
+      const { db } = await import('../../lib/database-async');
       jest.mocked(db.prepare).mockReturnValue({
         all: jest.fn().mockRejectedValue(new Error('Database error'))
       } as any);

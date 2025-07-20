@@ -1,12 +1,12 @@
 import { render, screen } from '@testing-library/react';
 
 // Mock the version module before importing the component
-jest.mock('@/lib/version', () => ({
+jest.mock('../../lib/version', () => ({
   APP_VERSION: '1.2.3',
   APP_NAME: 'test-app'
 }));
 
-import VersionFooter from '@/components/VersionFooter';
+import VersionFooter from '../../components/VersionFooter';
 
 describe('VersionFooter', () => {
   it('should display app name and version', () => {

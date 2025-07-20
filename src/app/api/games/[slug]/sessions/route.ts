@@ -16,47 +16,47 @@ export async function POST(
     console.log('=== END PRODUCTION REQUEST LOG ===');
     
     await initializeDatabase();
-    console.log('API /api/games/[slug]/sessions: Database initialized');
+    console.log('[PROD] Database initialized');
     
     const userId = getAuthenticatedUserId(request);
-    console.log('API /api/games/[slug]/sessions: User ID:', userId);
+    console.log('[PROD] User ID:', userId);
     
     if (!userId) {
-      console.log('API /api/games/[slug]/sessions: No user ID, returning unauthorized');
+      console.log('[PROD] No user ID, returning unauthorized');
       return unauthorizedResponse();
     }
 
     const body = await request.json();
-    console.log('API /api/games/[slug]/sessions: Request body:', body);
+    console.log('[PROD] Request body:', JSON.stringify(body, null, 2));
     const { sessionName, players, teams, hasScoreTarget, scoreTarget, finishCurrentRound } = body;
     const { slug } = await params;
-    console.log('API /api/games/[slug]/sessions: Slug:', slug);
+    console.log('[PROD] Slug:', slug);
     
-    console.log('Create session request:', { slug, ...body });
+    console.log('[PROD] Create session request:', JSON.stringify({ slug, ...body }, null, 2));
 
     // Get game info
-    console.log('API /api/games/[slug]/sessions: Fetching game with slug:', slug);
+    console.log('[PROD] Fetching game with slug:', slug);
     const game = await db.prepare('SELECT * FROM games WHERE slug = ?').get(slug) as any;
-    console.log('API /api/games/[slug]/sessions: Game found:', game);
+    console.log('[PROD] Game found:', JSON.stringify(game, null, 2));
     if (!game) {
-      console.log('API /api/games/[slug]/sessions: Game not found');
+      console.log('[PROD] Game not found');
       return NextResponse.json({ error: 'Jeu non trouvé' }, { status: 404 });
     }
 
     if (!game.is_implemented) {
-      console.log('API /api/games/[slug]/sessions: Game not implemented');
+      console.log('[PROD] Game not implemented');
       return NextResponse.json({ error: 'Jeu non implémenté' }, { status: 400 });
     }
 
     // Validate players based on game configuration
-    console.log('API /api/games/[slug]/sessions: Validating players, game.team_based:', game.team_based);
+    console.log('[PROD] Validating players, team_based:', game.team_based);
     const allPlayers = game.team_based 
       ? teams?.flatMap((team: any) => team.players).filter((p: string) => p.trim()) || []
       : players?.filter((p: string) => p.trim()) || [];
-    console.log('API /api/games/[slug]/sessions: All players:', allPlayers);
+    console.log('[PROD] All players:', JSON.stringify(allPlayers, null, 2));
 
     if (allPlayers.length < game.min_players || allPlayers.length > game.max_players) {
-      console.log(`API /api/games/[slug]/sessions: Invalid player count: ${allPlayers.length}, required: ${game.min_players}-${game.max_players}`);
+      console.log(`[PROD] Invalid player count: ${allPlayers.length}, required: ${game.min_players}-${game.max_players}`);
       return NextResponse.json(
         { error: `Il faut entre ${game.min_players} et ${game.max_players} joueurs` },
         { status: 400 }
@@ -74,13 +74,13 @@ export async function POST(
     }
 
     // Create session
-    console.log('API /api/games/[slug]/sessions: Creating session');
+    console.log('[PROD] Creating session');
     const insertSession = await db.prepare(`
       INSERT INTO game_sessions (user_id, game_id, session_name, has_score_target, score_target, finish_current_round, score_direction)
       VALUES (?, ?, ?, ?, ?, ?, ?)
     `);
 
-    console.log('API /api/games/[slug]/sessions: Session parameters:', {
+    const sessionParams = {
       userId, 
       gameId: game.id, 
       sessionName: sessionName || `Partie de ${game.name}`, 
@@ -88,7 +88,8 @@ export async function POST(
       scoreTarget: hasScoreTarget && scoreTarget ? parseInt(scoreTarget) : null, 
       finishCurrentRound: hasScoreTarget && finishCurrentRound ? 1 : 0,
       scoreDirection: game.score_direction || 'higher'
-    });
+    };
+    console.log('[PROD] Session parameters:', JSON.stringify(sessionParams, null, 2));
 
     const sessionResult = await insertSession.run(
       userId, 
@@ -100,7 +101,7 @@ export async function POST(
       game.score_direction || 'higher'
     );
     const sessionId = sessionResult.lastInsertRowid;
-    console.log('API /api/games/[slug]/sessions: Session created with ID:', sessionId);
+    console.log('[PROD] Session created with ID:', sessionId);
 
     // Add players
     const insertPlayer = await db.prepare(`

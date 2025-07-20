@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Save, X } from 'lucide-react';
+import ScoreInput from '@/components/ui/ScoreInput';
 
 interface Player {
   id: number;
@@ -99,6 +100,7 @@ export default function YamsScoreSheet({ sessionId }: YamsScoreSheetProps) {
       }
     }));
   };
+
 
   const saveScore = async (categoryId: string, playerId: number, fixedScore?: number) => {
     const score = fixedScore !== undefined ? fixedScore.toString() : currentScores[categoryId]?.[playerId];
@@ -316,24 +318,15 @@ export default function YamsScoreSheet({ sessionId }: YamsScoreSheetProps) {
                                     {existingScore}
                                   </span>
                                 ) : (
-                                  <div className="flex items-center justify-center space-x-2">
-                                    <input
-                                      type="number"
-                                      min="0"
-                                      max="30"
-                                      step={category.step || 1}
-                                      value={currentScores[category.id]?.[player.id] || ''}
-                                      onChange={(e) => handleScoreChange(category.id, player.id, e.target.value)}
-                                      className="w-16 text-center border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                    />
-                                    <button
-                                      onClick={() => saveScore(category.id, player.id)}
-                                      disabled={!currentScores[category.id]?.[player.id]}
-                                      className="p-1 text-green-600 hover:text-green-800 disabled:opacity-50 dark:text-green-400 dark:hover:text-green-300"
-                                    >
-                                      <Save className="h-4 w-4" />
-                                    </button>
-                                  </div>
+                                  <ScoreInput
+                                    value={currentScores[category.id]?.[player.id] || ''}
+                                    onChange={(value) => handleScoreChange(category.id, player.id, value)}
+                                    onSave={() => saveScore(category.id, player.id)}
+                                    min={0}
+                                    max={30}
+                                    step={category.step || 1}
+                                    size="md"
+                                  />
                                 )}
                               </td>
                             );
@@ -386,7 +379,7 @@ export default function YamsScoreSheet({ sessionId }: YamsScoreSheetProps) {
                                     {existingScore}
                                   </span>
                                 ) : (
-                                  <div className="flex items-center justify-center space-x-2">
+                                  <div className="flex items-center justify-center space-x-1 sm:space-x-2">
                                     {category.fixedScore ? (
                                       <>
                                         <input
@@ -409,23 +402,14 @@ export default function YamsScoreSheet({ sessionId }: YamsScoreSheetProps) {
                                         </button>
                                       </>
                                     ) : (
-                                      <>
-                                        <input
-                                          type="number"
-                                          min="0"
-                                          step={category.step || 1}
-                                          value={currentScores[category.id]?.[player.id] || ''}
-                                          onChange={(e) => handleScoreChange(category.id, player.id, e.target.value)}
-                                          className="w-16 text-center border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                        />
-                                        <button
-                                          onClick={() => saveScore(category.id, player.id)}
-                                          disabled={!currentScores[category.id]?.[player.id]}
-                                          className="p-1 text-green-600 hover:text-green-800 disabled:opacity-50 dark:text-green-400 dark:hover:text-green-300"
-                                        >
-                                          <Save className="h-4 w-4" />
-                                        </button>
-                                      </>
+                                      <ScoreInput
+                                        value={currentScores[category.id]?.[player.id] || ''}
+                                        onChange={(value) => handleScoreChange(category.id, player.id, value)}
+                                        onSave={() => saveScore(category.id, player.id)}
+                                        min={0}
+                                        step={category.step || 1}
+                                        size="md"
+                                      />
                                     )}
                                   </div>
                                 )}

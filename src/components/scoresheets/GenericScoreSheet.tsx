@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Save, Trophy } from 'lucide-react';
 import { useScoreTarget } from '@/hooks/useScoreTarget';
+import ScoreInput from '@/components/ui/ScoreInput';
 
 interface Player {
   id: number;
@@ -237,11 +238,10 @@ export default function GenericScoreSheet({ sessionId }: GenericScoreSheetProps)
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                           {player.name}
                         </label>
-                        <input
-                          type="number"
+                        <ScoreInput
                           value={currentRound[player.id] || ''}
-                          onChange={(e) => handleScoreChange(player.id, e.target.value)}
-                          className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                          onChange={(value) => handleScoreChange(player.id, value)}
+                          size="md"
                           placeholder="0"
                         />
                       </div>

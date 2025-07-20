@@ -91,12 +91,29 @@ export async function POST(
     };
     console.log('[PROD] Session parameters:', JSON.stringify(sessionParams, null, 2));
 
+    // Safely handle scoreTarget to avoid NaN
+    let safeScoreTarget = null;
+    if (hasScoreTarget && scoreTarget) {
+      const parsed = parseInt(scoreTarget);
+      safeScoreTarget = isNaN(parsed) ? null : parsed;
+    }
+    
+    console.log('[PROD] Safe parameters before insert:', {
+      userId,
+      gameId: game.id,
+      sessionName: sessionName || `Partie de ${game.name}`,
+      hasScoreTarget: hasScoreTarget ? 1 : 0,
+      safeScoreTarget,
+      finishCurrentRound: hasScoreTarget && finishCurrentRound ? 1 : 0,
+      scoreDirection: game.score_direction || 'higher'
+    });
+
     const sessionResult = await insertSession.run(
       userId, 
       game.id, 
       sessionName || `Partie de ${game.name}`, 
       hasScoreTarget ? 1 : 0,  // Convert boolean to 0/1 for SQLite
-      hasScoreTarget && scoreTarget ? parseInt(scoreTarget) : null, 
+      safeScoreTarget, 
       hasScoreTarget && finishCurrentRound ? 1 : 0,  // Convert boolean to 0/1
       game.score_direction || 'higher'
     );

@@ -7,7 +7,8 @@ export async function POST(
   { params }: { params: Promise<{ slug: string; sessionId: string }> }
 ) {
   try {
-    await initializeDatabase();
+    // Skip initializeDatabase() - it's already initialized
+    // await initializeDatabase();
     
     const userId = getAuthenticatedUserId(request);
     
@@ -18,37 +19,36 @@ export async function POST(
     const { sessionId, slug } = await params;
     const { scores } = await request.json();
 
-    // Verify session ownership
-    const session = await db.prepare(`
-      SELECT gs.id 
+    // Combined query: verify session ownership + get next round number
+    const sessionAndRound = await db.prepare(`
+      SELECT 
+        gs.id as session_id,
+        COALESCE(MAX(s.round_number), 0) + 1 as next_round
       FROM game_sessions gs
       JOIN games g ON gs.game_id = g.id
+      LEFT JOIN scores s ON s.session_id = gs.id
       WHERE gs.id = ? AND gs.user_id = ? AND g.slug = ?
+      GROUP BY gs.id
     `).get(sessionId, userId, slug);
 
-    if (!session) {
+    if (!sessionAndRound) {
       return NextResponse.json({ error: 'Partie non trouvée' }, { status: 404 });
     }
 
-    // Get the next round number
-    const lastRound = await db.prepare(`
-      SELECT MAX(round_number) as max_round
-      FROM scores
-      WHERE session_id = ?
-    `).get(sessionId) as any;
+    const roundNumber = sessionAndRound.next_round;
 
-    const roundNumber = (lastRound?.max_round || 0) + 1;
-
-    // Insert scores for this round
+    // Batch insert scores - prepare statement once, execute multiple times
     const insertScore = await db.prepare(`
       INSERT INTO scores (session_id, player_id, round_number, score_type, score_value)
       VALUES (?, ?, ?, 'round', ?)
     `);
 
-    // Process scores sequentially for async database
-    for (const score of scores) {
-      await insertScore.run(sessionId, score.playerId, roundNumber, score.score);
-    }
+    // Use Promise.all for parallel execution (if database supports it)
+    await Promise.all(
+      scores.map((score: any) => 
+        insertScore.run(sessionId, score.playerId, roundNumber, score.score)
+      )
+    );
 
     return NextResponse.json({ 
       message: 'Manche enregistrée',

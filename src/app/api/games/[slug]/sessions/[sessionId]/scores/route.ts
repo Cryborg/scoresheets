@@ -7,7 +7,8 @@ export async function POST(
   { params }: { params: { slug: string; sessionId: string } }
 ) {
   try {
-    await initializeDatabase();
+    // Skip initializeDatabase() - it's already initialized on first call
+    // await initializeDatabase();
     
     const userId = getAuthenticatedUserId(request);
     
@@ -18,31 +19,27 @@ export async function POST(
     const { sessionId, slug } = params;
     const { categoryId, playerId, score } = await request.json();
 
-    // Verify session ownership
-    const session = await db.prepare(`
-      SELECT gs.id 
+    // Single optimized query: verify session ownership + get existing score in one go
+    const sessionAndScore = await db.prepare(`
+      SELECT 
+        gs.id as session_id,
+        s.id as existing_score_id
       FROM game_sessions gs
       JOIN games g ON gs.game_id = g.id
+      LEFT JOIN scores s ON s.session_id = gs.id AND s.player_id = ? AND s.score_type = ?
       WHERE gs.id = ? AND gs.user_id = ? AND g.slug = ?
-    `).get(sessionId, userId, slug);
+    `).get(playerId, categoryId, sessionId, userId, slug);
 
-    if (!session) {
+    if (!sessionAndScore) {
       return NextResponse.json({ error: 'Partie non trouvée' }, { status: 404 });
     }
 
-    // Check if score already exists
-    const existingScore = await db.prepare(`
-      SELECT id FROM scores
-      WHERE session_id = ? AND player_id = ? AND score_type = ?
-    `).get(sessionId, playerId, categoryId);
-
-    if (existingScore) {
+    // Optimized: single query based on existing score
+    if (sessionAndScore.existing_score_id) {
       // Update existing score
       await db.prepare(`
-        UPDATE scores
-        SET score_value = ?
-        WHERE session_id = ? AND player_id = ? AND score_type = ?
-      `).run(score, sessionId, playerId, categoryId);
+        UPDATE scores SET score_value = ? WHERE id = ?
+      `).run(score, sessionAndScore.existing_score_id);
     } else {
       // Insert new score
       await db.prepare(`

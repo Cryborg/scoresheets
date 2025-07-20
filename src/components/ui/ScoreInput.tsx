@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Plus, Minus } from 'lucide-react';
+import { Plus, Minus, Save } from 'lucide-react';
 
 interface ScoreInputProps {
   value: string | number;
@@ -10,8 +10,11 @@ interface ScoreInputProps {
   min?: number;
   max?: number;
   step?: number;
+  validValues?: number[];
   disabled?: boolean;
   showButtons?: boolean;
+  showSaveButton?: boolean;
+  autoSaveOnButtons?: boolean;
   size?: 'sm' | 'md' | 'lg';
   className?: string;
   placeholder?: string;
@@ -24,8 +27,11 @@ export default function ScoreInput({
   min = 0,
   max,
   step = 1,
+  validValues,
   disabled = false,
   showButtons = true,
+  showSaveButton = false,
+  autoSaveOnButtons = true,
   size = 'md',
   className = '',
   placeholder
@@ -36,20 +42,61 @@ export default function ScoreInput({
     setInternalValue(value.toString());
   }, [value]);
 
+  const getNextValidValue = (currentValue: number, direction: 'up' | 'down'): number => {
+    if (validValues) {
+      const sortedValues = [...validValues].sort((a, b) => a - b);
+      const currentIndex = sortedValues.indexOf(currentValue);
+      
+      if (direction === 'up') {
+        if (currentIndex === -1) {
+          // Si la valeur actuelle n'est pas dans la liste, prendre la première valeur supérieure
+          const nextValue = sortedValues.find(v => v > currentValue);
+          return nextValue || sortedValues[sortedValues.length - 1];
+        }
+        return currentIndex < sortedValues.length - 1 ? sortedValues[currentIndex + 1] : sortedValues[currentIndex];
+      } else {
+        if (currentIndex === -1) {
+          // Si la valeur actuelle n'est pas dans la liste, prendre la première valeur inférieure
+          const reversedValues = [...sortedValues].reverse();
+          const prevValue = reversedValues.find(v => v < currentValue);
+          return prevValue || sortedValues[0];
+        }
+        return currentIndex > 0 ? sortedValues[currentIndex - 1] : sortedValues[currentIndex];
+      }
+    }
+    
+    // Comportement normal avec step
+    if (direction === 'up') {
+      return Math.min(max || Infinity, currentValue + step);
+    } else {
+      return Math.max(min, currentValue - step);
+    }
+  };
+
   const handleIncrement = () => {
     const currentValue = parseInt(internalValue) || 0;
-    const newValue = Math.min(max || Infinity, currentValue + step);
+    const newValue = getNextValidValue(currentValue, 'up');
     const newValueStr = newValue.toString();
     setInternalValue(newValueStr);
     onChange(newValueStr);
+    
+    // Auto-save when using +/- buttons (if enabled)
+    if (onSave && autoSaveOnButtons && newValueStr !== '0') {
+      setTimeout(() => onSave(), 100); // Small delay to ensure state is updated
+    }
   };
 
   const handleDecrement = () => {
     const currentValue = parseInt(internalValue) || 0;
-    const newValue = Math.max(min, currentValue - step);
+    const newValue = getNextValidValue(currentValue, 'down');
     const newValueStr = newValue.toString();
     setInternalValue(newValueStr);
     onChange(newValueStr);
+    
+    // Auto-save when using +/- buttons (if enabled)
+    if (onSave && autoSaveOnButtons && newValueStr !== '0') {
+      setTimeout(() => onSave(), 100); // Small delay to ensure state is updated
+    }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -100,7 +147,8 @@ export default function ScoreInput({
         onBlur={handleBlur}
         disabled={disabled}
         placeholder={placeholder}
-        className={`${config.input} text-center font-semibold border-2 border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
+        autoComplete="off"
+        className={`${config.input} text-center font-semibold border-2 border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${className}`}
       />
     );
   }
@@ -127,7 +175,8 @@ export default function ScoreInput({
         onBlur={handleBlur}
         disabled={disabled}
         placeholder={placeholder}
-        className={`${config.input} text-center font-semibold border-2 border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
+        autoComplete="off"
+        className={`${config.input} text-center font-semibold border-2 border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${className}`}
       />
       
       {/* Bouton + */}
@@ -138,6 +187,17 @@ export default function ScoreInput({
       >
         <Plus className={config.icon} />
       </button>
+      
+      {/* Bouton de sauvegarde optionnel */}
+      {showSaveButton && onSave && (
+        <button
+          onClick={onSave}
+          disabled={disabled || !internalValue || internalValue.trim() === ''}
+          className={`${config.button} flex items-center justify-center bg-blue-100 hover:bg-blue-200 text-blue-600 hover:text-blue-700 rounded-lg transition-colors dark:bg-blue-900/20 dark:hover:bg-blue-900/40 dark:text-blue-400 dark:hover:text-blue-300 disabled:opacity-50 disabled:cursor-not-allowed`}
+        >
+          <Save className={config.icon} />
+        </button>
+      )}
     </div>
   );
 }

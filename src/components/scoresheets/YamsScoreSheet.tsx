@@ -30,22 +30,24 @@ interface GameSession {
 interface YamsCategoryExtended extends YamsCategory {
   fixedScore?: number;
   step?: number;
+  maxValue?: number;
+  validValues?: number[];
 }
 
 const YAMS_CATEGORIES: YamsCategoryExtended[] = [
-  { id: 'ones', name: '1', description: 'Somme des 1', calculate: () => 0, step: 1 },
-  { id: 'twos', name: '2', description: 'Somme des 2', calculate: () => 0, step: 2 },
-  { id: 'threes', name: '3', description: 'Somme des 3', calculate: () => 0, step: 3 },
-  { id: 'fours', name: '4', description: 'Somme des 4', calculate: () => 0, step: 4 },
-  { id: 'fives', name: '5', description: 'Somme des 5', calculate: () => 0, step: 5 },
-  { id: 'sixes', name: '6', description: 'Somme des 6', calculate: () => 0, step: 6 },
-  { id: 'three_of_kind', name: 'Brelan', description: 'Somme des dés (3 identiques)', calculate: () => 0 },
-  { id: 'four_of_kind', name: 'Carré', description: 'Somme des dés (4 identiques)', calculate: () => 0 },
+  { id: 'ones', name: '1', description: 'Somme des 1', calculate: () => 0, validValues: [0, 1, 2, 3, 4, 5] },
+  { id: 'twos', name: '2', description: 'Somme des 2', calculate: () => 0, validValues: [0, 2, 4, 6, 8, 10] },
+  { id: 'threes', name: '3', description: 'Somme des 3', calculate: () => 0, validValues: [0, 3, 6, 9, 12, 15] },
+  { id: 'fours', name: '4', description: 'Somme des 4', calculate: () => 0, validValues: [0, 4, 8, 12, 16, 20] },
+  { id: 'fives', name: '5', description: 'Somme des 5', calculate: () => 0, validValues: [0, 5, 10, 15, 20, 25] },
+  { id: 'sixes', name: '6', description: 'Somme des 6', calculate: () => 0, validValues: [0, 6, 12, 18, 24, 30] },
+  { id: 'three_of_kind', name: 'Brelan', description: 'Somme des dés (3 identiques)', calculate: () => 0, validValues: [0, 3, 6, 9, 12, 15, 18] },
+  { id: 'four_of_kind', name: 'Carré', description: 'Somme des dés (4 identiques)', calculate: () => 0, validValues: [0, 4, 8, 12, 16, 20, 24] },
   { id: 'full_house', name: 'Full', description: '25 points (3+2 identiques)', calculate: () => 0, fixedScore: 25 },
   { id: 'small_straight', name: 'Petite suite', description: '30 points (4 consécutifs)', calculate: () => 0, fixedScore: 30 },
   { id: 'large_straight', name: 'Grande suite', description: '40 points (5 consécutifs)', calculate: () => 0, fixedScore: 40 },
   { id: 'yams', name: 'Yams', description: '50 points (5 identiques)', calculate: () => 0, fixedScore: 50 },
-  { id: 'chance', name: 'Chance', description: 'Somme de tous les dés', calculate: () => 0 },
+  { id: 'chance', name: 'Chance', description: 'Somme de tous les dés', calculate: () => 0, validValues: [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30] },
 ];
 
 interface YamsScoreSheetProps {
@@ -323,9 +325,11 @@ export default function YamsScoreSheet({ sessionId }: YamsScoreSheetProps) {
                                     onChange={(value) => handleScoreChange(category.id, player.id, value)}
                                     onSave={() => saveScore(category.id, player.id)}
                                     min={0}
-                                    max={30}
+                                    max={category.maxValue || 30}
                                     step={category.step || 1}
+                                    validValues={category.validValues}
                                     size="md"
+                                    autoSaveOnButtons={true}
                                   />
                                 )}
                               </td>
@@ -407,8 +411,11 @@ export default function YamsScoreSheet({ sessionId }: YamsScoreSheetProps) {
                                         onChange={(value) => handleScoreChange(category.id, player.id, value)}
                                         onSave={() => saveScore(category.id, player.id)}
                                         min={0}
+                                        max={category.maxValue || 30}
                                         step={category.step || 1}
+                                        validValues={category.validValues}
                                         size="md"
+                                        autoSaveOnButtons={true}
                                       />
                                     )}
                                   </div>

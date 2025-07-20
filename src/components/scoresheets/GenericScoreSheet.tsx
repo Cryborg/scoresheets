@@ -243,6 +243,7 @@ export default function GenericScoreSheet({ sessionId }: GenericScoreSheetProps)
                           onChange={(value) => handleScoreChange(player.id, value)}
                           size="md"
                           placeholder="0"
+                          autoSaveOnButtons={false}
                         />
                       </div>
                     ))}

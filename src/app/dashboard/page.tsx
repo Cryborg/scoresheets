@@ -292,7 +292,7 @@ export default function DashboardPage() {
                               </div>
                             )}
                             <div className="text-xs text-gray-400 dark:text-gray-500">
-                              {new Date(session.date_played).toLocaleDateString('fr-FR')}
+                              {new Date(session.date_played).toISOString().split('T')[0]}
                             </div>
                           </div>
                         </div>

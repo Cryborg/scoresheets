@@ -35,7 +35,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   };
 
   if (!mounted) {
-    return <div className="min-h-screen bg-gray-50">{children}</div>;
+    return <div suppressHydrationWarning className="min-h-screen bg-gray-50">{children}</div>;
   }
 
   return (

@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, useCallback } from 'react';
+import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Save, Trophy } from 'lucide-react';
 import { useScoreTarget } from '@/hooks/useScoreTarget';
@@ -33,6 +33,7 @@ interface GenericScoreSheetProps {
 
 export default function GenericScoreSheet({ sessionId }: GenericScoreSheetProps) {
   const router = useRouter();
+  const params = useParams();
   
   const [session, setSession] = useState<GameSession | null>(null);
   const [currentRound, setCurrentRound] = useState<{ [playerId: number]: string }>({});
@@ -41,15 +42,10 @@ export default function GenericScoreSheet({ sessionId }: GenericScoreSheetProps)
 
   const { hasValidScoreTarget, hasReachedTarget, someoneReachedTarget, ScoreTargetInfo, shouldShowTrophy } = useScoreTarget(session);
 
-  useEffect(() => {
-    fetchSession();
-  }, [sessionId]); // fetchSession is stable, no need to include
-
-  const fetchSession = async () => {
+  const fetchSession = useCallback(async () => {
     try {
-      // Get the slug from the URL
-      const pathSegments = window.location.pathname.split('/');
-      const slug = pathSegments[2]; // /games/[slug]/[sessionId]
+      // Get the slug from the URL params
+      const slug = params.slug as string;
       
       const response = await fetch(`/api/games/${slug}/sessions/${sessionId}`);
       if (response.ok) {
@@ -69,7 +65,11 @@ export default function GenericScoreSheet({ sessionId }: GenericScoreSheetProps)
     } finally {
       setLoading(false);
     }
-  };
+  }, [sessionId, params.slug, router]);
+
+  useEffect(() => {
+    fetchSession();
+  }, [fetchSession]);
 
   const handleScoreChange = (playerId: number, score: string) => {
     setCurrentRound(prev => ({
@@ -95,8 +95,7 @@ export default function GenericScoreSheet({ sessionId }: GenericScoreSheetProps)
     setSaving(true);
 
     try {
-      const pathSegments = window.location.pathname.split('/');
-      const slug = pathSegments[2];
+      const slug = params.slug as string;
       
       const response = await fetch(`/api/games/${slug}/sessions/${sessionId}/rounds`, {
         method: 'POST',
@@ -131,7 +130,7 @@ export default function GenericScoreSheet({ sessionId }: GenericScoreSheetProps)
     return roundsToCount.reduce((total, round) => {
       const score = round.scores[playerId] || 0;
       // Ensure score is treated as number
-      const numericScore = typeof score === 'number' ? score : parseInt(String(score), 10);
+      const numericScore = parseInt(String(score), 10);
       return total + (isNaN(numericScore) ? 0 : numericScore);
     }, 0);
   };

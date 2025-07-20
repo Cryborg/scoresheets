@@ -1,7 +1,14 @@
 import Database from 'better-sqlite3';
 import { join } from 'path';
+import { existsSync, mkdirSync } from 'fs';
 
-const dbPath = join(process.cwd(), 'data', 'scoresheets.db');
+// Ensure data directory exists
+const dataDir = join(process.cwd(), 'data');
+if (!existsSync(dataDir)) {
+  mkdirSync(dataDir, { recursive: true });
+}
+
+const dbPath = join(dataDir, 'scoresheets.db');
 const db = new Database(dbPath);
 
 db.exec(`

@@ -1,9 +1,11 @@
 import { NextResponse } from 'next/server';
-import db from '@/lib/database';
+import { db, initializeDatabase } from '@/lib/database-async';
 
 export async function GET() {
   try {
-    const categories = db.prepare(`
+    await initializeDatabase();
+    
+    const categories = await db.prepare(`
       SELECT id, name
       FROM game_categories
       ORDER BY name

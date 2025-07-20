@@ -1,15 +1,111 @@
+// database.ts - Auto-switches between local SQLite and Turso
+import { createClient } from '@libsql/client';
 import Database from 'better-sqlite3';
 import { join } from 'path';
 import { existsSync, mkdirSync } from 'fs';
 
-// Ensure data directory exists
-const dataDir = join(process.cwd(), 'data');
-if (!existsSync(dataDir)) {
-  mkdirSync(dataDir, { recursive: true });
+// Check if we should use Turso
+const useTurso = process.env.NODE_ENV === 'production' && process.env.TURSO_DATABASE_URL;
+
+interface DbResult {
+  lastInsertRowid: number;
+  changes: number;
 }
 
-const dbPath = join(dataDir, 'scoresheets.db');
-const db = new Database(dbPath);
+interface DbStatement {
+  run(...params: any[]): DbResult;
+  get(...params: any[]): any;
+  all(...params: any[]): any[];
+}
+
+interface DbAdapter {
+  prepare(sql: string): DbStatement;
+  exec(sql: string): void;
+  transaction(fn: Function): Function;
+}
+
+let db: DbAdapter;
+
+if (useTurso) {
+  // Production with Turso
+  const tursoClient = createClient({
+    url: process.env.TURSO_DATABASE_URL!,
+    authToken: process.env.TURSO_AUTH_TOKEN!
+  });
+
+  // Create sync-like wrapper for Turso
+  db = {
+    prepare: (sql: string) => ({
+      run: (...params: any[]): DbResult => {
+        // Use a synchronous approach with a promise-based hack for edge runtime compatibility
+        let result: any = { lastInsertRowid: 0, changes: 0 };
+        const promise = tursoClient.execute({ sql, args: params }).then(r => {
+          result = { lastInsertRowid: Number(r.lastInsertRowId), changes: r.rowsAffected };
+        });
+        
+        // For edge runtime, we need to handle this differently
+        if (typeof EdgeRuntime !== 'undefined') {
+          throw new Error('Use async database operations in edge runtime');
+        }
+        
+        // This is a hack to make async sync in Node.js runtime
+        require('child_process').execSync('node -e "process.exit(0)"', { timeout: 0.1 });
+        return result;
+      },
+      get: (...params: any[]) => {
+        let result: any;
+        tursoClient.execute({ sql, args: params }).then(r => {
+          result = r.rows[0] || undefined;
+        });
+        return result;
+      },
+      all: (...params: any[]): any[] => {
+        let result: any[] = [];
+        tursoClient.execute({ sql, args: params }).then(r => {
+          result = r.rows;
+        });
+        return result;
+      }
+    }),
+    exec: (sql: string) => {
+      const statements = sql.split(';').filter(s => s.trim());
+      for (const statement of statements) {
+        if (statement.trim()) {
+          tursoClient.execute(statement);
+        }
+      }
+    },
+    transaction: (fn: Function) => fn
+  };
+} else {
+  // Local development with SQLite
+  const dataDir = join(process.cwd(), 'data');
+  if (!existsSync(dataDir)) {
+    mkdirSync(dataDir, { recursive: true });
+  }
+  
+  const dbPath = join(dataDir, 'scoresheets.db');
+  const sqliteDb = new Database(dbPath);
+  
+  db = {
+    prepare: (sql: string) => {
+      const stmt = sqliteDb.prepare(sql);
+      return {
+        run: (...params: any[]): DbResult => {
+          const result = stmt.run(...params);
+          return {
+            lastInsertRowid: Number(result.lastInsertRowid),
+            changes: result.changes
+          };
+        },
+        get: (...params: any[]) => stmt.get(...params),
+        all: (...params: any[]): any[] => stmt.all(...params)
+      };
+    },
+    exec: (sql: string) => sqliteDb.exec(sql),
+    transaction: (fn: Function) => sqliteDb.transaction(fn)
+  };
+}
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS users (

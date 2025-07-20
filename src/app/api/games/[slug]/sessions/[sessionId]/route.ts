@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import db from '@/lib/database';
+import { db, initializeDatabase } from '@/lib/database-async';
 import { getAuthenticatedUserId, unauthorizedResponse } from '@/lib/auth';
 
 export async function GET(
@@ -7,6 +7,8 @@ export async function GET(
   { params }: { params: Promise<{ slug: string; sessionId: string }> }
 ) {
   try {
+    await initializeDatabase();
+    
     const userId = getAuthenticatedUserId(request);
     
     if (!userId) {
@@ -16,13 +18,13 @@ export async function GET(
     const { sessionId, slug } = await params;
 
     // Get game info
-    const game = db.prepare('SELECT * FROM games WHERE slug = ?').get(slug) as any;
+    const game = await db.prepare('SELECT * FROM games WHERE slug = ?').get(slug) as any;
     if (!game) {
       return NextResponse.json({ error: 'Jeu non trouvé' }, { status: 404 });
     }
 
     // Get session with players
-    const session = db.prepare(`
+    const session = await db.prepare(`
       SELECT 
         gs.id,
         gs.session_name,
@@ -40,7 +42,7 @@ export async function GET(
     }
 
     // Get players
-    const players = db.prepare(`
+    const players = await db.prepare(`
       SELECT id, name, position
       FROM players
       WHERE session_id = ?
@@ -63,7 +65,7 @@ export async function GET(
     // Handle different score types
     if (game.score_type === 'categories') {
       // For games like Yams with categories
-      const scoreQuery = db.prepare(`
+      const scoreQuery = await db.prepare(`
         SELECT 
           s.player_id,
           s.score_type as category_id,
@@ -72,7 +74,7 @@ export async function GET(
         WHERE s.session_id = ?
       `);
 
-      const scores = scoreQuery.all(sessionId) as any[];
+      const scores = await scoreQuery.all(sessionId) as any[];
 
       sessionData.scores = scores.reduce((acc: any, score: any) => {
         if (!acc[score.category_id]) {
@@ -83,17 +85,18 @@ export async function GET(
       }, {});
     } else {
       // For games with rounds (Rami, Belotte, etc.)
-      const roundsQuery = db.prepare(`
+      const roundsQuery = await db.prepare(`
         SELECT DISTINCT round_number
         FROM scores
         WHERE session_id = ?
         ORDER BY round_number
       `);
 
-      const rounds = roundsQuery.all(sessionId) as any[];
+      const rounds = await roundsQuery.all(sessionId) as any[];
 
-      sessionData.rounds = rounds.map((round: any) => {
-        const roundScores = db.prepare(`
+      sessionData.rounds = [];
+      for (const round of rounds) {
+        const roundScores = await db.prepare(`
           SELECT player_id, score_value
           FROM scores
           WHERE session_id = ? AND round_number = ?
@@ -104,11 +107,11 @@ export async function GET(
           return acc;
         }, {});
 
-        return {
+        sessionData.rounds.push({
           round_number: round.round_number,
           scores
-        };
-      });
+        });
+      }
     }
 
     return NextResponse.json({ session: sessionData });

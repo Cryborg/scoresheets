@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import db from '@/lib/database';
+import { db, initializeDatabase } from '@/lib/database-async';
 
 function getUserIdFromRequest(request: NextRequest): number | null {
   const token = request.cookies.get('auth-token')?.value;
@@ -29,8 +29,10 @@ export async function DELETE(
   }
 
   try {
+    await initializeDatabase();
+    
     // Verify the session belongs to the user
-    const session = db.prepare(
+    const session = await db.prepare(
       'SELECT user_id FROM game_sessions WHERE id = ?'
     ).get(sessionId) as { user_id: number } | undefined;
 
@@ -42,18 +44,14 @@ export async function DELETE(
       return NextResponse.json({ error: 'Non autorisé' }, { status: 403 });
     }
 
-    // Delete related data in a transaction
-    const deleteScores = db.prepare('DELETE FROM scores WHERE session_id = ?');
-    const deletePlayers = db.prepare('DELETE FROM players WHERE session_id = ?');
-    const deleteSession = db.prepare('DELETE FROM game_sessions WHERE id = ?');
+    // Delete related data sequentially (async doesn't support transactions the same way)
+    const deleteScores = await db.prepare('DELETE FROM scores WHERE session_id = ?');
+    const deletePlayers = await db.prepare('DELETE FROM players WHERE session_id = ?');
+    const deleteSession = await db.prepare('DELETE FROM game_sessions WHERE id = ?');
 
-    const transaction = db.transaction(() => {
-      deleteScores.run(sessionId);
-      deletePlayers.run(sessionId);
-      deleteSession.run(sessionId);
-    });
-
-    transaction();
+    await deleteScores.run(sessionId);
+    await deletePlayers.run(sessionId);
+    await deleteSession.run(sessionId);
 
     return NextResponse.json({ message: 'Session supprimée avec succès' });
   } catch (error) {

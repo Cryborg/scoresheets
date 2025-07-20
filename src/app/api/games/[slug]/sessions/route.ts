@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import db from '@/lib/database';
+import { db, initializeDatabase } from '@/lib/database-async';
 import { getAuthenticatedUserId, unauthorizedResponse } from '@/lib/auth';
 
 export async function POST(
@@ -7,6 +7,8 @@ export async function POST(
   { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
+    await initializeDatabase();
+    
     const userId = getAuthenticatedUserId(request);
     
     if (!userId) {
@@ -20,7 +22,7 @@ export async function POST(
     console.log('Create session request:', { slug, ...body });
 
     // Get game info
-    const game = db.prepare('SELECT * FROM games WHERE slug = ?').get(slug) as any;
+    const game = await db.prepare('SELECT * FROM games WHERE slug = ?').get(slug) as any;
     if (!game) {
       return NextResponse.json({ error: 'Jeu non trouvé' }, { status: 404 });
     }
@@ -52,12 +54,12 @@ export async function POST(
     }
 
     // Create session
-    const insertSession = db.prepare(`
+    const insertSession = await db.prepare(`
       INSERT INTO game_sessions (user_id, game_id, session_name, has_score_target, score_target, finish_current_round)
       VALUES (?, ?, ?, ?, ?, ?)
     `);
 
-    const sessionResult = insertSession.run(
+    const sessionResult = await insertSession.run(
       userId, 
       game.id, 
       sessionName || `Partie de ${game.name}`, 
@@ -68,32 +70,32 @@ export async function POST(
     const sessionId = sessionResult.lastInsertRowid;
 
     // Add players
-    const insertPlayer = db.prepare(`
+    const insertPlayer = await db.prepare(`
       INSERT INTO players (session_id, name, position)
       VALUES (?, ?, ?)
     `);
 
     let position = 0;
     if (game.team_based && teams) {
-      teams.forEach((team: any) => {
-        team.players.forEach((playerName: string) => {
+      for (const team of teams) {
+        for (const playerName of team.players) {
           if (playerName.trim()) {
-            insertPlayer.run(sessionId, playerName.trim(), position);
+            await insertPlayer.run(sessionId, playerName.trim(), position);
             position++;
           }
-        });
-      });
+        }
+      }
     } else if (players) {
-      players.forEach((playerName: string) => {
+      for (const playerName of players) {
         if (playerName.trim()) {
-          insertPlayer.run(sessionId, playerName.trim(), position);
+          await insertPlayer.run(sessionId, playerName.trim(), position);
           position++;
         }
-      });
+      }
     }
 
     // Save player names to user's frequent players
-    const updatePlayerStats = db.prepare(`
+    const updatePlayerStats = await db.prepare(`
       INSERT INTO user_players (user_id, player_name) 
       VALUES (?, ?)
       ON CONFLICT(user_id, player_name) DO UPDATE SET
@@ -101,15 +103,12 @@ export async function POST(
         last_played = CURRENT_TIMESTAMP
     `);
 
-    const transaction = db.transaction(() => {
-      allPlayers.forEach((playerName: string) => {
-        if (playerName.trim()) {
-          updatePlayerStats.run(userId, playerName.trim());
-        }
-      });
-    });
-
-    transaction();
+    // Save player names to user's frequent players
+    for (const playerName of allPlayers) {
+      if (playerName.trim()) {
+        await updatePlayerStats.run(userId, playerName.trim());
+      }
+    }
 
     return NextResponse.json({
       message: 'Partie créée avec succès',

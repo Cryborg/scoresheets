@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import db from '@/lib/database';
+import { db, initializeDatabase } from '@/lib/database-async';
 import { getAuthenticatedUserId, unauthorizedResponse } from '@/lib/auth';
 
 export async function GET(
@@ -7,6 +7,8 @@ export async function GET(
   { params }: { params: Promise<{ sessionId: string }> }
 ) {
   try {
+    await initializeDatabase();
+    
     const userId = getAuthenticatedUserId(request);
     
     if (!userId) {
@@ -16,7 +18,7 @@ export async function GET(
     const { sessionId } = await params;
 
     // Get session with players (for generic sessions, game_id is NULL)
-    const session = db.prepare(`
+    const session = await db.prepare(`
       SELECT 
         gs.id,
         gs.session_name,
@@ -35,7 +37,7 @@ export async function GET(
     }
 
     // Get players
-    const players = db.prepare(`
+    const players = await db.prepare(`
       SELECT id, name, position
       FROM players
       WHERE session_id = ?
@@ -43,14 +45,14 @@ export async function GET(
     `).all(sessionId);
 
     // Get rounds with scores
-    const roundsQuery = db.prepare(`
+    const roundsQuery = await db.prepare(`
       SELECT DISTINCT round_number
       FROM scores
       WHERE session_id = ?
       ORDER BY round_number
     `);
 
-    const rounds = roundsQuery.all(sessionId) as any[];
+    const rounds = await roundsQuery.all(sessionId) as any[];
 
     const sessionData = {
       id: session.id,
@@ -60,24 +62,27 @@ export async function GET(
       finish_current_round: session.finish_current_round,
       score_direction: session.score_direction,
       players,
-      rounds: rounds.map((round: any) => {
-        const roundScores = db.prepare(`
-          SELECT player_id, score_value
-          FROM scores
-          WHERE session_id = ? AND round_number = ?
-        `).all(sessionId, round.round_number) as any[];
-
-        const scores = roundScores.reduce((acc: any, score: any) => {
-          acc[score.player_id] = score.score_value;
-          return acc;
-        }, {});
-
-        return {
-          round_number: round.round_number,
-          scores
-        };
-      })
+      rounds: []
     };
+
+    // Add rounds with scores
+    for (const round of rounds) {
+      const roundScores = await db.prepare(`
+        SELECT player_id, score_value
+        FROM scores
+        WHERE session_id = ? AND round_number = ?
+      `).all(sessionId, round.round_number) as any[];
+
+      const scores = roundScores.reduce((acc: any, score: any) => {
+        acc[score.player_id] = score.score_value;
+        return acc;
+      }, {});
+
+      sessionData.rounds.push({
+        round_number: round.round_number,
+        scores
+      });
+    }
 
     return NextResponse.json({ session: sessionData });
   } catch (error) {

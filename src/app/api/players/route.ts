@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import db from '@/lib/database';
+import { db, initializeDatabase } from '@/lib/database-async';
 
 function getUserIdFromRequest(request: NextRequest): number | null {
   const token = request.cookies.get('auth-token')?.value;
@@ -20,7 +20,9 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const players = db.prepare(`
+    await initializeDatabase();
+    
+    const players = await db.prepare(`
       SELECT player_name, games_played, last_played 
       FROM user_players 
       WHERE user_id = ? 
@@ -41,13 +43,15 @@ export async function POST(request: NextRequest) {
   }
 
   try {
+    await initializeDatabase();
+    
     const { playerNames } = await request.json();
     
     if (!Array.isArray(playerNames)) {
       return NextResponse.json({ error: 'Format invalide' }, { status: 400 });
     }
 
-    const stmt = db.prepare(`
+    const stmt = await db.prepare(`
       INSERT INTO user_players (user_id, player_name) 
       VALUES (?, ?)
       ON CONFLICT(user_id, player_name) DO UPDATE SET
@@ -55,15 +59,11 @@ export async function POST(request: NextRequest) {
         last_played = CURRENT_TIMESTAMP
     `);
 
-    const transaction = db.transaction((names: string[]) => {
-      for (const name of names) {
-        if (name.trim()) {
-          stmt.run(userId, name.trim());
-        }
+    for (const name of playerNames) {
+      if (name.trim()) {
+        await stmt.run(userId, name.trim());
       }
-    });
-
-    transaction(playerNames);
+    }
 
     return NextResponse.json({ message: 'Joueurs enregistrés' });
   } catch (error) {

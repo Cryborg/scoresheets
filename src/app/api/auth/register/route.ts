@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const existingUser = getUserByEmail(email);
+    const existingUser = await getUserByEmail(email);
     if (existingUser) {
       return NextResponse.json(
         { error: 'Un utilisateur avec cet email existe déjà' },

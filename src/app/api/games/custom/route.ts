@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import db from '@/lib/database';
+import { db, initializeDatabase } from '@/lib/database-async';
 import { getAuthenticatedUserId, unauthorizedResponse } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
   try {
+    await initializeDatabase();
+    
     const userId = getAuthenticatedUserId(request);
     
     if (!userId) {
@@ -25,19 +27,19 @@ export async function POST(request: NextRequest) {
     }
 
     // Vérifier que le slug n'existe pas déjà
-    const existingGame = db.prepare('SELECT id FROM games WHERE slug = ?').get(slug);
+    const existingGame = await db.prepare('SELECT id FROM games WHERE slug = ?').get(slug);
     if (existingGame) {
       return NextResponse.json({ error: 'Un jeu avec ce nom existe déjà' }, { status: 400 });
     }
 
     // Vérifier que la catégorie existe
-    const category = db.prepare('SELECT id FROM game_categories WHERE id = ?').get(categoryId);
+    const category = await db.prepare('SELECT id FROM game_categories WHERE id = ?').get(categoryId);
     if (!category) {
       return NextResponse.json({ error: 'Catégorie invalide' }, { status: 400 });
     }
 
     // Créer le jeu
-    const insertGame = db.prepare(`
+    const insertGame = await db.prepare(`
       INSERT INTO games (
         name, 
         slug, 
@@ -53,7 +55,7 @@ export async function POST(request: NextRequest) {
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
-    const result = insertGame.run(
+    const result = await insertGame.run(
       name,
       slug,
       parseInt(categoryId),

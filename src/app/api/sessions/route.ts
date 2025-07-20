@@ -1,16 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
-import db from '@/lib/database';
+import { db, initializeDatabase } from '@/lib/database-async';
 import { getAuthenticatedUserId, unauthorizedResponse } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
   try {
+    await initializeDatabase();
+    
     const userId = getAuthenticatedUserId(request);
     
     if (!userId) {
       return unauthorizedResponse();
     }
 
-    const sessions = db.prepare(`
+    const sessions = await db.prepare(`
       SELECT 
         gs.id,
         gs.session_name,

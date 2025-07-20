@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import db from '@/lib/database';
+import { db, initializeDatabase } from '@/lib/database-async';
 import { getAuthenticatedUserId, unauthorizedResponse } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
   try {
+    await initializeDatabase();
+    
     const userId = getAuthenticatedUserId(request);
     
     if (!userId) {
@@ -33,12 +35,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Create session directly (without game reference for generic sessions)
-    const insertSession = db.prepare(`
+    const insertSession = await db.prepare(`
       INSERT INTO game_sessions (user_id, game_id, session_name, has_score_target, score_target, finish_current_round, score_direction)
       VALUES (?, ?, ?, ?, ?, ?, ?)
     `);
 
-    const sessionResult = insertSession.run(
+    const sessionResult = await insertSession.run(
       userId, 
       null, // game_id = NULL for generic sessions
       sessionName || 'Partie avec scores simples', 
@@ -50,21 +52,21 @@ export async function POST(request: NextRequest) {
     const sessionId = sessionResult.lastInsertRowid;
 
     // Add players
-    const insertPlayer = db.prepare(`
+    const insertPlayer = await db.prepare(`
       INSERT INTO players (session_id, name, position)
       VALUES (?, ?, ?)
     `);
 
     let position = 0;
-    validPlayers.forEach((playerName: string) => {
+    for (const playerName of validPlayers) {
       if (playerName.trim()) {
-        insertPlayer.run(sessionId, playerName.trim(), position);
+        await insertPlayer.run(sessionId, playerName.trim(), position);
         position++;
       }
-    });
+    }
 
     // Save player names to user's frequent players
-    const updatePlayerStats = db.prepare(`
+    const updatePlayerStats = await db.prepare(`
       INSERT INTO user_players (user_id, player_name) 
       VALUES (?, ?)
       ON CONFLICT(user_id, player_name) DO UPDATE SET
@@ -72,15 +74,11 @@ export async function POST(request: NextRequest) {
         last_played = CURRENT_TIMESTAMP
     `);
 
-    const transaction = db.transaction(() => {
-      validPlayers.forEach((playerName: string) => {
-        if (playerName.trim()) {
-          updatePlayerStats.run(userId, playerName.trim());
-        }
-      });
-    });
-
-    transaction();
+    for (const playerName of validPlayers) {
+      if (playerName.trim()) {
+        await updatePlayerStats.run(userId, playerName.trim());
+      }
+    }
 
     return NextResponse.json({
       message: 'Partie créée avec succès',

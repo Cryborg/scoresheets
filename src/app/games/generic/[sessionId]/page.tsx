@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Save, Trophy } from 'lucide-react';
@@ -49,13 +49,7 @@ export default function GenericSessionPage({ params }: GenericSessionPageProps) 
     getParams();
   }, [params]);
 
-  useEffect(() => {
-    if (sessionId) {
-      fetchSession();
-    }
-  }, [sessionId]); // fetchSession is stable, no need to include
-
-  const fetchSession = async () => {
+  const fetchSession = useCallback(async () => {
     try {
       const response = await authenticatedFetch(`/api/games/generic/sessions/${sessionId}`);
       if (response.ok) {
@@ -75,7 +69,13 @@ export default function GenericSessionPage({ params }: GenericSessionPageProps) 
     } finally {
       setLoading(false);
     }
-  };
+  }, [sessionId, router]);
+
+  useEffect(() => {
+    if (sessionId) {
+      fetchSession();
+    }
+  }, [sessionId, fetchSession]);
 
   const handleScoreChange = (playerId: number, score: string) => {
     setCurrentRound(prev => ({

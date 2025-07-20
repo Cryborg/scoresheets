@@ -1,7 +1,7 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect, useState, useCallback } from 'react';
 import { getGameComponent } from '@/lib/gameComponentLoader';
 import AuthGuard from '@/components/AuthGuard';
 import { authenticatedFetch } from '@/lib/authClient';
@@ -14,11 +14,7 @@ export default function GameSessionPage() {
   const [gameInfo, setGameInfo] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchGameInfo();
-  }, [slug]); // fetchGameInfo is stable, no need to include
-
-  const fetchGameInfo = async () => {
+  const fetchGameInfo = useCallback(async () => {
     try {
       const response = await authenticatedFetch('/api/games/all');
       if (response.ok) {
@@ -31,7 +27,11 @@ export default function GameSessionPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [slug]);
+
+  useEffect(() => {
+    fetchGameInfo();
+  }, [fetchGameInfo]);
 
   if (loading) {
     return (

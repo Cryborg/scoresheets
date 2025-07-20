@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
@@ -33,11 +33,7 @@ export default function NewGamePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    fetchGame();
-  }, [slug]);
-
-  const fetchGame = async () => {
+  const fetchGame = useCallback(async () => {
     try {
       const response = await authenticatedFetch('/api/games');
       if (response.ok) {
@@ -58,7 +54,11 @@ export default function NewGamePage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [slug, router]);
+
+  useEffect(() => {
+    fetchGame();
+  }, [fetchGame]);
 
   const initializePlayers = (game: Game) => {
     if (game.team_based) {

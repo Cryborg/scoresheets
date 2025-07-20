@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Save, X } from 'lucide-react';
@@ -60,11 +60,7 @@ export default function YamsScoreSheet({ sessionId }: YamsScoreSheetProps) {
   const [saving, setSaving] = useState(false);
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
 
-  useEffect(() => {
-    fetchSession();
-  }, [sessionId]);
-
-  const fetchSession = async () => {
+  const fetchSession = useCallback(async () => {
     try {
       const response = await fetch(`/api/games/yams/sessions/${sessionId}`);
       if (response.ok) {
@@ -88,7 +84,11 @@ export default function YamsScoreSheet({ sessionId }: YamsScoreSheetProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [sessionId, router]);
+
+  useEffect(() => {
+    fetchSession();
+  }, [fetchSession]);
 
   const handleScoreChange = (categoryId: string, playerId: number, score: string) => {
     setCurrentScores(prev => ({

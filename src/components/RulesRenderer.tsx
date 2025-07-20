@@ -1,5 +1,7 @@
 'use client';
 
+import { useMemo } from 'react';
+
 interface RulesRendererProps {
   rules: string;
   gameName: string;
@@ -92,12 +94,13 @@ function parseMarkdownToHTML(text: string): string {
 }
 
 export default function RulesRenderer({ rules }: RulesRendererProps) {
-  const htmlContent = parseMarkdownToHTML(rules);
+  const htmlContent = useMemo(() => parseMarkdownToHTML(rules), [rules]);
   
   return (
     <div className="prose prose-sm max-w-none dark:prose-invert">
       <div 
         className="space-y-2"
+        suppressHydrationWarning
         dangerouslySetInnerHTML={{ __html: htmlContent }}
       />
     </div>

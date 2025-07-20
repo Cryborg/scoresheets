@@ -1,12 +1,19 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 export default function HomePage() {
   const router = useRouter();
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
+    
     const token = document.cookie
       .split('; ')
       .find(row => row.startsWith('auth-token='));
@@ -16,7 +23,7 @@ export default function HomePage() {
     } else {
       router.push('/auth/login');
     }
-  }, [router]);
+  }, [router, mounted]);
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">

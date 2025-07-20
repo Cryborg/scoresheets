@@ -7,7 +7,14 @@ export async function POST(
   { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
+    // Log détaillé pour production
+    console.log('=== PRODUCTION REQUEST LOG ===');
     console.log('API /api/games/[slug]/sessions: Starting POST request');
+    console.log('Request URL:', request.url);
+    console.log('Request method:', request.method);
+    console.log('Timestamp:', new Date().toISOString());
+    console.log('=== END PRODUCTION REQUEST LOG ===');
+    
     await initializeDatabase();
     console.log('API /api/games/[slug]/sessions: Database initialized');
     
@@ -141,11 +148,28 @@ export async function POST(
       sessionId
     });
   } catch (error) {
-    console.error('API /api/games/[slug]/sessions: Create session error:', error);
-    console.error('API /api/games/[slug]/sessions: Error details:', error instanceof Error ? error.message : 'Unknown error');
-    console.error('API /api/games/[slug]/sessions: Error stack:', error instanceof Error ? error.stack : 'No stack');
+    // Logs spéciaux pour Vercel production
+    const errorDetails = {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : 'No stack',
+      timestamp: new Date().toISOString(),
+      url: request.url,
+      method: request.method
+    };
+    
+    console.error('=== PRODUCTION ERROR LOG ===');
+    console.error('API /api/games/[slug]/sessions: Create session error:', JSON.stringify(errorDetails, null, 2));
+    console.error('=== END PRODUCTION ERROR LOG ===');
+    
+    // Log également l'erreur brute
+    console.error('Raw error:', error);
+    
     return NextResponse.json(
-      { error: 'Erreur serveur', details: error instanceof Error ? error.message : 'Unknown error' },
+      { 
+        error: 'Erreur serveur', 
+        details: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: errorDetails.timestamp
+      },
       { status: 500 }
     );
   }

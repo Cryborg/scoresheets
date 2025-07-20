@@ -5,12 +5,14 @@
 Avant de terminer toute modification de code, toujours exécuter dans cet ordre :
 
 ```bash
-# 1. Tests unitaires et d'intégration
-npm test
+# 1. Vérification ESLint stricte et TypeScript
+npm run lint:strict
 
-# 2. Vérification ESLint et TypeScript
-npm run lint
+# 2. Tests unitaires et d'intégration
+npm test
 ```
+
+**Important :** Utiliser `npm run lint:strict` au lieu de `npm run lint` car il détecte beaucoup plus d'erreurs (types `any`, imports non optimisés, variables inutilisées, etc.)
 
 ### Tests disponibles
 
@@ -23,6 +25,21 @@ npm run test:watch
 
 # Lancer les tests avec rapport de couverture
 npm run test:coverage
+
+# ESLint strict (obligatoire avant chaque modification)
+npm run lint:strict
+
+# ESLint standard
+npm run lint
+
+# ESLint avec auto-fix
+npm run lint:fix
+
+# Vérification TypeScript
+npm run typecheck
+
+# Commande complète qualité (lint strict + typecheck + tests)
+npm run quality
 ```
 
 ### Structure des tests
@@ -65,11 +82,13 @@ Ces tests doivent TOUJOURS passer après chaque modification :
 
 ### Processus recommandé
 1. Faire les modifications de code
-2. Lancer les tests : `npm test`
-3. Vérifier ESLint : `npm run lint`
+2. **Obligatoire :** Lancer ESLint strict : `npm run lint:strict`
+3. **Obligatoire :** Lancer les tests : `npm test`
 4. Incrémenter la version appropriée
 5. Commiter les changements
 6. Déployer
+
+**Note :** `npm run quality` combine les étapes 2 et 3 en une seule commande
 
 ## Notes sur le projet
 

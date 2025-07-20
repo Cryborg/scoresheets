@@ -120,17 +120,33 @@ export async function POST(
     
     console.log('[PROD] Session result:', JSON.stringify(sessionResult, null, 2));
     
-    // Handle different formats of lastInsertRowid from Turso
+    // Handle Turso's lastInsertRowid issue
     let sessionId = sessionResult.lastInsertRowid;
     if (typeof sessionId === 'bigint') {
       sessionId = Number(sessionId);
     }
-    if (!sessionId || isNaN(sessionId)) {
-      console.error('[PROD] Invalid session ID:', sessionId, 'Result:', sessionResult);
-      return NextResponse.json(
-        { error: 'Erreur lors de la création de la session' },
-        { status: 500 }
-      );
+    
+    // If Turso returns null for lastInsertRowid, fetch the ID manually
+    if (!sessionId || sessionId === null || isNaN(sessionId)) {
+      console.log('[PROD] Turso returned null lastInsertRowid, fetching ID manually');
+      const lastSession = await db.prepare(`
+        SELECT id FROM game_sessions 
+        WHERE user_id = ? AND session_name = ? 
+        ORDER BY created_at DESC 
+        LIMIT 1
+      `).get(userId, sessionName || `Partie de ${game.name}`);
+      
+      console.log('[PROD] Manual fetch result:', lastSession);
+      
+      if (lastSession && lastSession.id) {
+        sessionId = Number(lastSession.id);
+      } else {
+        console.error('[PROD] Could not retrieve session ID after insert');
+        return NextResponse.json(
+          { error: 'Erreur lors de la création de la session' },
+          { status: 500 }
+        );
+      }
     }
     
     console.log('[PROD] Session created with ID:', sessionId);

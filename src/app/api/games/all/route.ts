@@ -10,7 +10,6 @@ export async function GET() {
         g.id,
         g.name,
         g.slug,
-        g.use_generic_scoring,
         g.score_type,
         g.team_based,
         g.min_players,

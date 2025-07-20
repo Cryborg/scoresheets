@@ -7,7 +7,7 @@ export interface ScoreSheetProps {
 
 interface GameInfo {
   slug: string;
-  use_generic_scoring?: boolean;
+  score_type?: string;
 }
 
 const LoadingComponent = () => (
@@ -28,8 +28,7 @@ const specificComponents: Record<string, ComponentType<ScoreSheetProps>> = {
 
 /**
  * Détermine quel composant utiliser pour un jeu donné
- * Si le jeu a use_generic_scoring=true, utilise le composant générique
- * Sinon, cherche un composant spécifique, ou utilise le générique par défaut
+ * Utilise un composant spécifique si disponible, sinon le composant générique
  */
 export function getGameComponent(gameInfo: GameInfo | string): ComponentType<ScoreSheetProps> | null {
   // Si c'est juste un slug string, on cherche d'abord dans les composants spécifiques
@@ -37,11 +36,6 @@ export function getGameComponent(gameInfo: GameInfo | string): ComponentType<Sco
     return specificComponents[gameInfo] || GenericScoreSheet;
   }
   
-  // Si on a l'info complète du jeu
-  if (gameInfo.use_generic_scoring) {
-    return GenericScoreSheet;
-  }
-  
-  // Sinon on cherche un composant spécifique
+  // Sinon on cherche un composant spécifique basé sur le slug
   return specificComponents[gameInfo.slug] || GenericScoreSheet;
 }

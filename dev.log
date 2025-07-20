@@ -1,0 +1,286 @@
+
+> scoresheets@0.1.0 dev
+> next dev --turbopack
+
+   ▲ Next.js 15.4.1 (Turbopack)
+   - Local:        http://localhost:3000
+   - Network:      http://192.168.1.1:3000
+   - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Compiled middleware in 72ms
+ ✓ Ready in 1004ms
+ ○ Compiling /auth/login ...
+ ✓ Compiled /auth/login in 1480ms
+ GET /auth/login 200 in 101ms
+ ✓ Compiled /favicon.ico in 126ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 402ms
+ ✓ Compiled /api/auth/login in 154ms
+Authentication attempt for: test@example.com Result: Success
+ POST /api/auth/login 200 in 261ms
+ ✓ Compiled /dashboard in 202ms
+ GET /dashboard 200 in 234ms
+ ✓ Compiled /api/sessions in 173ms
+ GET /api/games 200 in 263ms
+ GET /api/sessions 200 in 296ms
+ GET /api/games 200 in 32ms
+ GET /api/sessions 200 in 35ms
+ GET /api/games 200 in 19ms
+ GET /api/sessions 200 in 22ms
+ ✓ Compiled /games/custom/new in 162ms
+ GET /games/custom/new 200 in 181ms
+ ✓ Compiled /api/game-categories in 70ms
+ GET /api/game-categories 200 in 91ms
+ GET /api/game-categories 200 in 26ms
+ ✓ Compiled /api/games/custom in 47ms
+Create game request: {
+  name: 'Mille sabords',
+  slug: 'mille-sabords',
+  categoryId: 2,
+  rules: 'Règles pour Mille sabords',
+  teamBased: false,
+  minPlayers: 2,
+  maxPlayers: 6
+}
+ POST /api/games/custom 200 in 66ms
+ ✓ Compiled /games/[slug]/new in 135ms
+ GET /games/mille-sabords/new 200 in 442ms
+ GET /api/games 200 in 36ms
+ GET /api/games 200 in 70ms
+ ○ Compiling /api/players ...
+ ✓ Compiled /api/players in 594ms
+ GET /api/players 200 in 867ms
+ GET /api/players 200 in 50ms
+ GET /api/players 200 in 15ms
+ GET /api/players 200 in 16ms
+ ✓ Compiled /api/games/[slug]/sessions in 77ms
+Error: Route "/api/games/[slug]/sessions" used `params.slug`. `params` should be awaited before using its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+    at POST (src/app/api/games/[slug]/sessions/route.ts:17:12)
+  15 |
+  16 |     const { sessionName, players, teams, hasScoreTarget, scoreTarget, finishCurrentRound } = await request.json();
+> 17 |     const { slug } = params;
+     |            ^
+  18 |
+  19 |     // Get game info
+  20 |     const game = db.prepare('SELECT * FROM games WHERE slug = ?').get(slug) as any;
+Create session error: TypeError: SQLite3 can only bind numbers, strings, bigints, buffers, and null
+    at POST (src/app/api/games/[slug]/sessions/route.ts:57:40)
+  55 |     `);
+  56 |
+> 57 |     const sessionResult = insertSession.run(
+     |                                        ^
+  58 |       userId, 
+  59 |       game.id, 
+  60 |       sessionName, 
+ POST /api/games/mille-sabords/sessions 500 in 514ms
+ GET /games/mille-sabords/new 200 in 110ms
+ GET /api/games 200 in 57ms
+ GET /api/games 200 in 45ms
+ GET /api/games 200 in 49ms
+ GET /api/players 200 in 16ms
+ GET /api/players 200 in 17ms
+ GET /api/players 200 in 16ms
+ GET /api/players 200 in 13ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 248ms
+Create session request: {
+  slug: 'mille-sabords',
+  sessionName: 'Partie de Mille sabords',
+  players: [ 'Didi', 'Joe' ],
+  hasScoreTarget: false,
+  scoreTarget: null,
+  finishCurrentRound: false
+}
+ POST /api/games/mille-sabords/sessions 200 in 88ms
+ ✓ Compiled /games/[slug]/[sessionId] in 135ms
+ ⨯ ./src/lib/gameComponentLoader.ts:14:8
+Parsing ecmascript source code failed
+[0m [90m 12 |[39m
+ [90m 13 |[39m [36mconst[39m [33mLoadingComponent[39m [33m=[39m () [33m=>[39m (
+[31m[1m>[22m[39m[90m 14 |[39m   [33m<[39m[33mdiv[39m className[33m=[39m[32m"text-center py-8"[39m[33m>[39m[33mChargement[39m de la feuille de score[33m...[39m[33m<[39m[33m/[39m[33mdiv[39m[33m>[39m
+ [90m    |[39m        [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 15 |[39m )[33m;[39m
+ [90m 16 |[39m
+ [90m 17 |[39m [90m// Import générique pour les jeux simples[39m[0m
+
+Expected '>', got 'className'
+
+Import traces:
+  Client Component Browser:
+    ./src/lib/gameComponentLoader.ts [Client Component Browser]
+    ./src/app/games/[slug]/[sessionId]/page.tsx [Client Component Browser]
+    ./src/app/games/[slug]/[sessionId]/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/lib/gameComponentLoader.ts [Client Component SSR]
+    ./src/app/games/[slug]/[sessionId]/page.tsx [Client Component SSR]
+    ./src/app/games/[slug]/[sessionId]/page.tsx [Server Component]
+
+
+ ○ Compiling /_error ...
+ ✓ Compiled /_error in 604ms
+ GET /games/mille-sabords/1 500 in 827ms
+ ⨯ ./src/lib/gameComponentLoader.ts:14:8
+Parsing ecmascript source code failed
+[0m [90m 12 |[39m
+ [90m 13 |[39m [36mconst[39m [33mLoadingComponent[39m [33m=[39m () [33m=>[39m (
+[31m[1m>[22m[39m[90m 14 |[39m   [33m<[39m[33mdiv[39m className[33m=[39m[32m"text-center py-8"[39m[33m>[39m[33mChargement[39m de la feuille de score[33m...[39m[33m<[39m[33m/[39m[33mdiv[39m[33m>[39m
+ [90m    |[39m        [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 15 |[39m )[33m;[39m
+ [90m 16 |[39m
+ [90m 17 |[39m [90m// Import générique pour les jeux simples[39m[0m
+
+Expected '>', got 'className'
+
+Import traces:
+  Client Component Browser:
+    ./src/lib/gameComponentLoader.ts [Client Component Browser]
+    ./src/app/games/[slug]/[sessionId]/page.tsx [Client Component Browser]
+    ./src/app/games/[slug]/[sessionId]/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/lib/gameComponentLoader.ts [Client Component SSR]
+    ./src/app/games/[slug]/[sessionId]/page.tsx [Client Component SSR]
+    ./src/app/games/[slug]/[sessionId]/page.tsx [Server Component]
+
+
+ GET /games/mille-sabords/1 500 in 15ms
+ GET /favicon.ico 500 in 49ms
+ ✓ Compiled /games/[slug]/[sessionId] in 21ms
+ GET /games/mille-sabords/1 200 in 583ms
+ ✓ Compiled /api/games/all in 130ms
+ GET /api/games/all 200 in 175ms
+ GET /api/games/all 200 in 19ms
+ GET /api/games/all 200 in 26ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 246ms
+ ✓ Compiled /api/games/[slug]/sessions/[sessionId] in 49ms
+Error: Route "/api/games/[slug]/sessions/[sessionId]" used `params.sessionId`. `params` should be awaited before using its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+    at GET (src/app/api/games/[slug]/sessions/[sessionId]/route.ts:16:12)
+  14 |     }
+  15 |
+> 16 |     const { sessionId, slug } = params;
+     |            ^
+  17 |
+  18 |     // Get game info
+  19 |     const game = db.prepare('SELECT * FROM games WHERE slug = ?').get(slug) as any;
+Error: Route "/api/games/[slug]/sessions/[sessionId]" used `params.slug`. `params` should be awaited before using its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+    at GET (src/app/api/games/[slug]/sessions/[sessionId]/route.ts:16:23)
+  14 |     }
+  15 |
+> 16 |     const { sessionId, slug } = params;
+     |                       ^
+  17 |
+  18 |     // Get game info
+  19 |     const game = db.prepare('SELECT * FROM games WHERE slug = ?').get(slug) as any;
+ GET /api/games/mille-sabords/sessions/1 200 in 397ms
+Error: Route "/api/games/[slug]/sessions/[sessionId]" used `params.sessionId`. `params` should be awaited before using its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+    at GET (src/app/api/games/[slug]/sessions/[sessionId]/route.ts:16:12)
+  14 |     }
+  15 |
+> 16 |     const { sessionId, slug } = params;
+     |            ^
+  17 |
+  18 |     // Get game info
+  19 |     const game = db.prepare('SELECT * FROM games WHERE slug = ?').get(slug) as any;
+Error: Route "/api/games/[slug]/sessions/[sessionId]" used `params.slug`. `params` should be awaited before using its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+    at GET (src/app/api/games/[slug]/sessions/[sessionId]/route.ts:16:23)
+  14 |     }
+  15 |
+> 16 |     const { sessionId, slug } = params;
+     |                       ^
+  17 |
+  18 |     // Get game info
+  19 |     const game = db.prepare('SELECT * FROM games WHERE slug = ?').get(slug) as any;
+ GET /api/games/mille-sabords/sessions/1 200 in 87ms
+ ✓ Compiled /api/games/[slug]/sessions/[sessionId]/rounds in 63ms
+Error: Route "/api/games/[slug]/sessions/[sessionId]/rounds" used `params.sessionId`. `params` should be awaited before using its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+    at POST (src/app/api/games/[slug]/sessions/[sessionId]/rounds/route.ts:16:12)
+  14 |     }
+  15 |
+> 16 |     const { sessionId, slug } = params;
+     |            ^
+  17 |     const { scores } = await request.json();
+  18 |
+  19 |     // Verify session ownership
+Error: Route "/api/games/[slug]/sessions/[sessionId]/rounds" used `params.slug`. `params` should be awaited before using its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+    at POST (src/app/api/games/[slug]/sessions/[sessionId]/rounds/route.ts:16:23)
+  14 |     }
+  15 |
+> 16 |     const { sessionId, slug } = params;
+     |                       ^
+  17 |     const { scores } = await request.json();
+  18 |
+  19 |     // Verify session ownership
+ POST /api/games/mille-sabords/sessions/1/rounds 200 in 430ms
+ GET /api/games/mille-sabords/sessions/1 200 in 59ms
+Error: Route "/api/games/[slug]/sessions/[sessionId]/rounds" used `params.sessionId`. `params` should be awaited before using its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+    at POST (src/app/api/games/[slug]/sessions/[sessionId]/rounds/route.ts:16:12)
+  14 |     }
+  15 |
+> 16 |     const { sessionId, slug } = params;
+     |            ^
+  17 |     const { scores } = await request.json();
+  18 |
+  19 |     // Verify session ownership
+Error: Route "/api/games/[slug]/sessions/[sessionId]/rounds" used `params.slug`. `params` should be awaited before using its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+    at POST (src/app/api/games/[slug]/sessions/[sessionId]/rounds/route.ts:16:23)
+  14 |     }
+  15 |
+> 16 |     const { sessionId, slug } = params;
+     |                       ^
+  17 |     const { scores } = await request.json();
+  18 |
+  19 |     // Verify session ownership
+ POST /api/games/mille-sabords/sessions/1/rounds 200 in 136ms
+ GET /api/games/mille-sabords/sessions/1 200 in 36ms
+Error: Route "/api/games/[slug]/sessions/[sessionId]/rounds" used `params.sessionId`. `params` should be awaited before using its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+    at POST (src/app/api/games/[slug]/sessions/[sessionId]/rounds/route.ts:16:12)
+  14 |     }
+  15 |
+> 16 |     const { sessionId, slug } = params;
+     |            ^
+  17 |     const { scores } = await request.json();
+  18 |
+  19 |     // Verify session ownership
+Error: Route "/api/games/[slug]/sessions/[sessionId]/rounds" used `params.slug`. `params` should be awaited before using its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+    at POST (src/app/api/games/[slug]/sessions/[sessionId]/rounds/route.ts:16:23)
+  14 |     }
+  15 |
+> 16 |     const { sessionId, slug } = params;
+     |                       ^
+  17 |     const { scores } = await request.json();
+  18 |
+  19 |     // Verify session ownership
+ POST /api/games/mille-sabords/sessions/1/rounds 200 in 91ms
+ GET /api/games/mille-sabords/sessions/1 200 in 12ms
+ ✓ Compiled in 23ms
+ ✓ Compiled in 18ms
+ ✓ Compiled in 53ms
+ GET /dashboard 200 in 48ms
+ GET /api/sessions 200 in 48ms
+ GET /api/games 200 in 56ms
+ GET /api/sessions 200 in 41ms
+ GET /api/games 200 in 39ms
+ GET /games/rami/new 200 in 43ms
+ GET /api/games 200 in 46ms
+ GET /api/games 200 in 33ms
+ GET /api/players 200 in 30ms
+ GET /api/players 200 in 15ms
+ GET /api/players 200 in 18ms
+ GET /api/players 200 in 15ms
+Create session request: {
+  slug: 'rami',
+  sessionName: 'Partie de Rami',
+  players: [ 'Didi', 'Joe' ],
+  hasScoreTarget: false,
+  scoreTarget: null,
+  finishCurrentRound: false
+}
+ POST /api/games/rami/sessions 200 in 35ms
+ GET /games/rami/2 200 in 115ms
+ GET /api/games/all 200 in 624ms
+ GET /api/games/all 200 in 69ms
+ GET /api/games/rami/sessions/2 200 in 33ms
+ GET /api/games/rami/sessions/2 200 in 51ms
+ POST /api/games/rami/sessions/2/rounds 200 in 86ms
+ GET /api/games/rami/sessions/2 200 in 37ms
+[?25h

@@ -40,7 +40,14 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   if (!mounted) {
     console.log('ThemeProvider: Not mounted yet, showing loading state');
-    return <div suppressHydrationWarning className="min-h-screen bg-gray-50">{children}</div>;
+    // Rendu identique côté serveur et client avant hydratation
+    return (
+      <ThemeContext.Provider value={{ theme: 'light', toggleTheme }}>
+        <div suppressHydrationWarning className="min-h-screen bg-gray-50">
+          {children}
+        </div>
+      </ThemeContext.Provider>
+    );
   }
 
   console.log('ThemeProvider: Fully mounted, rendering with theme:', theme);

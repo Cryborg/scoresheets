@@ -11,6 +11,42 @@ const compat = new FlatCompat({
 
 const eslintConfig = [
   ...compat.extends("next/core-web-vitals", "next/typescript"),
+  {
+    ignores: [
+      // Build outputs
+      ".next/",
+      "dist/",
+      "build/",
+      
+      // Dependencies
+      "node_modules/",
+      
+      // Generated files
+      "*.generated.*",
+      
+      // Test coverage
+      "coverage/",
+      
+      // Environment files
+      ".env",
+      ".env.local",
+      ".env.production",
+      ".env.test",
+      
+      // Database files
+      "data/",
+      "*.db",
+      "*.sqlite",
+      "*.sqlite3",
+      
+      // Logs
+      "*.log",
+      
+      // Temporary files
+      ".tmp/",
+      "tmp/",
+    ],
+  },
 ];
 
 export default eslintConfig;

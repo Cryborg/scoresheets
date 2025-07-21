@@ -80,10 +80,7 @@ export default function ScoreInput({
     setInternalValue(newValueStr);
     onChange(newValueStr);
     
-    // Auto-save when using +/- buttons (if enabled)
-    if (onSave && autoSaveOnButtons && newValueStr !== '0') {
-      setTimeout(() => onSave(), 100); // Small delay to ensure state is updated
-    }
+    // Don't auto-save on +/- buttons - let user choose when to save
   };
 
   const handleDecrement = () => {
@@ -93,10 +90,7 @@ export default function ScoreInput({
     setInternalValue(newValueStr);
     onChange(newValueStr);
     
-    // Auto-save when using +/- buttons (if enabled)
-    if (onSave && autoSaveOnButtons && newValueStr !== '0') {
-      setTimeout(() => onSave(), 100); // Small delay to ensure state is updated
-    }
+    // Don't auto-save on +/- buttons - let user choose when to save
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {

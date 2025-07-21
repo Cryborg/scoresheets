@@ -329,7 +329,8 @@ export default function YamsScoreSheet({ sessionId }: YamsScoreSheetProps) {
                                     step={category.step || 1}
                                     validValues={category.validValues}
                                     size="md"
-                                    autoSaveOnButtons={true}
+                                    showSaveButton={true}
+                                    autoSaveOnButtons={false}
                                   />
                                 )}
                               </td>
@@ -415,7 +416,8 @@ export default function YamsScoreSheet({ sessionId }: YamsScoreSheetProps) {
                                         step={category.step || 1}
                                         validValues={category.validValues}
                                         size="md"
-                                        autoSaveOnButtons={true}
+                                        showSaveButton={true}
+                                        autoSaveOnButtons={false}
                                       />
                                     )}
                                   </div>

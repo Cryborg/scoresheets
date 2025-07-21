@@ -33,6 +33,9 @@ const specificComponents: Record<string, ComponentType<ScoreSheetProps>> = {
   'bridge': dynamic(() => import('@/components/scoresheets/BridgeScoreSheet'), {
     loading: LoadingComponent
   }),
+  'mille-bornes': dynamic(() => import('@/components/scoresheets/MilleBornesScoreSheet'), {
+    loading: LoadingComponent
+  }),
 };
 
 /**

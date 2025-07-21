@@ -287,6 +287,31 @@ async function seedInitialData(): Promise<void> {
     console.log('✅ Bridge game added');
   }
 
+  // Ensure Mille Bornes exists
+  const existingMilleBornes = await tursoClient.execute({
+    sql: 'SELECT id FROM games WHERE slug = ?',
+    args: ['mille-bornes']
+  });
+  
+  if (existingMilleBornes.rows.length === 0) {
+    await tursoClient.execute(`
+      INSERT INTO games (name, slug, category_id, rules, is_implemented, score_type, team_based, min_players, max_players, score_direction)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `, [
+      'Mille Bornes',
+      'mille-bornes',
+      1, // Jeux de cartes
+      'Jeu de cartes de course automobile. Course jusqu\'à 1000 km avec cartes de distance, attaques et parades. Se joue de 2 à 6 joueurs.',
+      1, // is_implemented
+      'rounds',
+      0, // team_based (individuel)
+      2, // min_players
+      6, // max_players
+      'higher'
+    ]);
+    console.log('✅ Mille Bornes game added');
+  }
+
   // Create admin user if it doesn't exist, or update existing user to admin
   const adminEmail = process.env.ADMIN_EMAIL;
   const adminPassword = process.env.ADMIN_PASSWORD;

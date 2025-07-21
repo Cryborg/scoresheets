@@ -34,19 +34,39 @@ npm run version:major   # Breaking changes
 
 ### Ajout d'un nouveau jeu
 
+**⚠️ IMPORTANT :** Utiliser le système harmonisé de création de jeux !
+
 1. **Base de données :** Ajouter dans `src/lib/database.ts` → `seedInitialData()`
    ```sql
    INSERT INTO games (name, slug, category_id, is_implemented, score_type, team_based, min_players, max_players, score_direction)
    VALUES ('Nouveau Jeu', 'nouveau-jeu', 1, 1, 'rounds', 0, 2, 6, 'higher');
    ```
 
-2. **Page de création :** `src/app/games/[slug]/new/page.tsx` (utilise le slug)
+2. **Page de création :** La page `src/app/games/[slug]/new/page.tsx` est déjà générique !
+   - ✅ **Utilise automatiquement** `useGameSessionCreator` hook
+   - ✅ **Utilise automatiquement** `GameSessionForm` component  
+   - ✅ **Interface harmonisée** avec tous les autres jeux
+   - 🔧 **Pas besoin de coder** - le système s'adapte au `slug` et aux propriétés du jeu
 
 3. **Composant scoresheet :** `src/components/scoresheets/NouveauJeuScoreSheet.tsx`
 
 4. **Route API scores :** `/api/games/[slug]/sessions/[sessionId]/scores/route.ts`
 
 5. **Tests :** Créer dans `src/__tests__/api/games/` et `src/__tests__/components/`
+
+### Système de création harmonisé
+
+**Composants réutilisables (NE PAS dupliquer) :**
+- `useGameSessionCreator` hook : Logique commune de création
+- `GameSessionForm` component : Formulaire unifié
+- `PlayerInput` component : Saisie joueurs avec autocomplétion
+- `GameSetupCard` component : Cards de configuration
+
+**Architecture automatique :**
+- Gestion équipes vs joueurs individuels selon `team_based`
+- Validation automatique selon `min_players` / `max_players`  
+- Interface adaptative selon le type de jeu
+- Spinners et états de chargement intégrés
 
 ### Types de scoring
 - `'categories'` : Scoring par catégories comme Yams

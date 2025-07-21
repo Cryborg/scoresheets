@@ -24,7 +24,7 @@ interface GameSession {
   session_name: string;
   score_target?: number;
   players: Player[];
-  scores: { [categoryId: string]: { [playerId: number]: number } };
+  scores: { [categoryId: string]: { [playerId: number]: number | undefined } };
 }
 
 interface YamsCategoryExtended extends YamsCategory {
@@ -204,11 +204,12 @@ export default function YamsScoreSheet({ sessionId }: YamsScoreSheetProps) {
     let upperSectionTotal = 0;
 
     YAMS_CATEGORIES.forEach(category => {
-      const score = session.scores[category.id]?.[playerId] || 0;
-      total += score;
+      const score = session.scores[category.id]?.[playerId];
+      const scoreValue = score !== undefined ? score : 0;
+      total += scoreValue;
       
       if (['ones', 'twos', 'threes', 'fours', 'fives', 'sixes'].includes(category.id)) {
-        upperSectionTotal += score;
+        upperSectionTotal += scoreValue;
       }
     });
 
@@ -224,7 +225,8 @@ export default function YamsScoreSheet({ sessionId }: YamsScoreSheetProps) {
     
     let total = 0;
     ['ones', 'twos', 'threes', 'fours', 'fives', 'sixes'].forEach(categoryId => {
-      total += session.scores[categoryId]?.[playerId] || 0;
+      const score = session.scores[categoryId]?.[playerId];
+      total += score !== undefined ? score : 0;
     });
     return total;
   };
@@ -288,7 +290,7 @@ export default function YamsScoreSheet({ sessionId }: YamsScoreSheetProps) {
                   <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
                     <thead className="bg-gray-50 dark:bg-gray-700">
                       <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider w-48">
+                        <th className="sticky left-0 z-10 bg-gray-50 dark:bg-gray-700 px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider w-32 sm:w-48">
                           Catégorie
                         </th>
                         {session.players.map((player, index) => (
@@ -303,9 +305,13 @@ export default function YamsScoreSheet({ sessionId }: YamsScoreSheetProps) {
                     <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-600">
                       {YAMS_CATEGORIES.slice(0, 6).map((category) => (
                         <tr key={category.id}>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
-                            <span className="font-semibold">{category.name}</span>
-                            <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">({category.description})</span>
+                          <td className="sticky left-0 z-10 bg-white dark:bg-gray-800 px-3 sm:px-6 py-4 text-sm font-medium text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600">
+                            <div className="flex flex-col sm:flex-row sm:items-center">
+                              <span className="font-semibold">{category.name}</span>
+                              <span className="text-xs text-gray-500 dark:text-gray-400 sm:ml-2 leading-tight">
+                                ({category.description})
+                              </span>
+                            </div>
                           </td>
                           {session.players.map((player, index) => {
                             const existingScore = session.scores[category.id]?.[player.id];
@@ -340,8 +346,13 @@ export default function YamsScoreSheet({ sessionId }: YamsScoreSheetProps) {
                       ))}
                       
                       <tr className="bg-gray-100 dark:bg-gray-700">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900 dark:text-white">
-                          Sous-total (1-6)
+                        <td className="sticky left-0 z-10 bg-gray-100 dark:bg-gray-700 px-3 sm:px-6 py-4 text-sm font-bold text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600">
+                          <div className="flex flex-col sm:flex-row sm:items-center">
+                            <span>Sous-total</span>
+                            <span className="text-xs font-normal text-gray-500 dark:text-gray-400 sm:ml-2">
+                              (1-6)
+                            </span>
+                          </div>
                         </td>
                         {session.players.map((player, index) => (
                           <td key={player.id} className={`px-6 py-4 whitespace-nowrap text-center text-sm font-bold text-gray-900 dark:text-white ${
@@ -353,8 +364,13 @@ export default function YamsScoreSheet({ sessionId }: YamsScoreSheetProps) {
                       </tr>
                       
                       <tr className="bg-gray-100 dark:bg-gray-700">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900 dark:text-white">
-                          Bonus (≥63: +35)
+                        <td className="sticky left-0 z-10 bg-gray-100 dark:bg-gray-700 px-3 sm:px-6 py-4 text-sm font-bold text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600">
+                          <div className="flex flex-col sm:flex-row sm:items-center">
+                            <span>Bonus</span>
+                            <span className="text-xs font-normal text-gray-500 dark:text-gray-400 sm:ml-2">
+                              (≥63: +35)
+                            </span>
+                          </div>
                         </td>
                         {session.players.map((player, index) => (
                           <td key={player.id} className={`px-6 py-4 whitespace-nowrap text-center text-sm font-bold text-gray-900 dark:text-white ${
@@ -367,9 +383,13 @@ export default function YamsScoreSheet({ sessionId }: YamsScoreSheetProps) {
 
                       {YAMS_CATEGORIES.slice(6).map((category) => (
                         <tr key={category.id}>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
-                            <span className="font-semibold">{category.name}</span>
-                            <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">({category.description})</span>
+                          <td className="sticky left-0 z-10 bg-white dark:bg-gray-800 px-3 sm:px-6 py-4 text-sm font-medium text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600">
+                            <div className="flex flex-col sm:flex-row sm:items-center">
+                              <span className="font-semibold">{category.name}</span>
+                              <span className="text-xs text-gray-500 dark:text-gray-400 sm:ml-2 leading-tight">
+                                ({category.description})
+                              </span>
+                            </div>
                           </td>
                           {session.players.map((player, index) => {
                             const existingScore = session.scores[category.id]?.[player.id];
@@ -429,7 +449,7 @@ export default function YamsScoreSheet({ sessionId }: YamsScoreSheetProps) {
                       ))}
                       
                       <tr className="bg-green-100 dark:bg-green-900/30">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900 dark:text-white">
+                        <td className="sticky left-0 z-10 bg-green-100 dark:bg-green-900/30 px-3 sm:px-6 py-4 text-sm font-bold text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600">
                           TOTAL
                         </td>
                         {session.players.map((player, index) => (

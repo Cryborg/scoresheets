@@ -36,7 +36,16 @@ export async function POST(
 
     // Get game info
     console.log('[PROD] Fetching game with slug:', slug);
-    const game = await db.prepare('SELECT * FROM games WHERE slug = ?').get(slug) as any;
+    const game = await db.prepare('SELECT * FROM games WHERE slug = ?').get(slug) as {
+      id: number;
+      name: string;
+      slug: string;
+      is_implemented: number;
+      team_based: number;
+      min_players: number;
+      max_players: number;
+      score_direction: string;
+    } | undefined;
     console.log('[PROD] Game found:', JSON.stringify(game, null, 2));
     if (!game) {
       console.log('[PROD] Game not found');
@@ -51,7 +60,7 @@ export async function POST(
     // Validate players based on game configuration
     console.log('[PROD] Validating players, team_based:', game.team_based);
     const allPlayers = game.team_based 
-      ? teams?.flatMap((team: any) => team.players).filter((p: string) => p.trim()) || []
+      ? teams?.flatMap((team: { players: string[] }) => team.players).filter((p: string) => p.trim()) || []
       : players?.filter((p: string) => p.trim()) || [];
     console.log('[PROD] All players:', JSON.stringify(allPlayers, null, 2));
 
@@ -65,7 +74,7 @@ export async function POST(
 
     if (game.team_based && teams) {
       const expectedTeams = game.max_players / 2;
-      if (teams.length !== expectedTeams || teams.some((team: any) => team.players.length !== 2)) {
+      if (teams.length !== expectedTeams || teams.some((team: { players: string[] }) => team.players.length !== 2)) {
         return NextResponse.json(
           { error: `Il faut ${expectedTeams} équipes de 2 joueurs` },
           { status: 400 }

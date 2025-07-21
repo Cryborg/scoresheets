@@ -22,19 +22,19 @@ jest.mock('../../lib/database-async', () => {
       prepare: (sql: string) => {
         const stmt = testDb.prepare(sql);
         return {
-          run: async (...params: any[]) => {
+          run: async (...params: unknown[]) => {
             const result = stmt.run(...params);
             return {
               lastInsertRowid: Number(result.lastInsertRowid),
               changes: result.changes
             };
           },
-          get: async (...params: any[]) => stmt.get(...params),
-          all: async (...params: any[]) => stmt.all(...params)
+          get: async (...params: unknown[]) => stmt.get(...params),
+          all: async (...params: unknown[]) => stmt.all(...params)
         };
       },
       exec: async (sql: string) => testDb.exec(sql),
-      transaction: async (fn: () => Promise<any>) => {
+      transaction: async (fn: () => Promise<unknown>) => {
         const txn = testDb.transaction(() => fn());
         return await txn();
       }

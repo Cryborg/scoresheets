@@ -11,7 +11,12 @@ export default function GameSessionPage() {
   const slug = params.slug as string;
   const sessionId = params.sessionId as string;
   
-  const [gameInfo, setGameInfo] = useState<any>(null);
+  const [gameInfo, setGameInfo] = useState<{
+    id: number;
+    name: string;
+    slug: string;
+    is_implemented: boolean;
+  } | null>(null);
   const [loading, setLoading] = useState(true);
 
   const fetchGameInfo = useCallback(async () => {
@@ -19,7 +24,7 @@ export default function GameSessionPage() {
       const response = await authenticatedFetch('/api/games/all');
       if (response.ok) {
         const data = await response.json();
-        const game = data.games.find((g: any) => g.slug === slug);
+        const game = data.games.find((g: { slug: string }) => g.slug === slug);
         setGameInfo(game);
       }
     } catch (error) {

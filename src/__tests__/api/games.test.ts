@@ -42,7 +42,6 @@ describe('/api/games', () => {
 
   describe('GET', () => {
     it('should return games successfully', async () => {
-      const request = new NextRequest('http://localhost:3000/api/games');
       const response = await GET();
       
       expect(response.status).toBe(200);
@@ -63,7 +62,7 @@ describe('/api/games', () => {
       const { db } = await import('../../lib/database-async');
       jest.mocked(db.prepare).mockReturnValue({
         all: jest.fn().mockRejectedValue(new Error('Database error'))
-      } as any);
+      } as { all: jest.Mock });
 
       const response = await GET();
       

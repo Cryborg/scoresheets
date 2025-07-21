@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useTheme } from '@/components/ThemeProvider';
 
 export default function RegisterPage() {
   const [username, setUsername] = useState('');
@@ -12,6 +13,7 @@ export default function RegisterPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const { theme } = useTheme();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,7 +71,12 @@ export default function RegisterPage() {
                 required
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm dark:bg-gray-800 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border rounded-t-md focus:outline-none focus:z-10 sm:text-sm"
+                style={{
+                  backgroundColor: theme === 'dark' ? '#374151' : '#ffffff',
+                  borderColor: theme === 'dark' ? '#4b5563' : '#d1d5db',
+                  color: theme === 'dark' ? '#ffffff' : '#111827',
+                }}
                 placeholder="Nom d'utilisateur"
               />
             </div>
@@ -79,7 +86,12 @@ export default function RegisterPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm dark:bg-gray-800 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border focus:outline-none focus:z-10 sm:text-sm"
+                style={{
+                  backgroundColor: theme === 'dark' ? '#374151' : '#ffffff',
+                  borderColor: theme === 'dark' ? '#4b5563' : '#d1d5db',
+                  color: theme === 'dark' ? '#ffffff' : '#111827',
+                }}
                 placeholder="Adresse email"
               />
             </div>
@@ -89,7 +101,12 @@ export default function RegisterPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm dark:bg-gray-800 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border focus:outline-none focus:z-10 sm:text-sm"
+                style={{
+                  backgroundColor: theme === 'dark' ? '#374151' : '#ffffff',
+                  borderColor: theme === 'dark' ? '#4b5563' : '#d1d5db',
+                  color: theme === 'dark' ? '#ffffff' : '#111827',
+                }}
                 placeholder="Mot de passe"
               />
             </div>
@@ -99,7 +116,12 @@ export default function RegisterPage() {
                 required
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm dark:bg-gray-800 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border rounded-b-md focus:outline-none focus:z-10 sm:text-sm"
+                style={{
+                  backgroundColor: theme === 'dark' ? '#374151' : '#ffffff',
+                  borderColor: theme === 'dark' ? '#4b5563' : '#d1d5db',
+                  color: theme === 'dark' ? '#ffffff' : '#111827',
+                }}
                 placeholder="Confirmer le mot de passe"
               />
             </div>

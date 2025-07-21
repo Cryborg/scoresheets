@@ -93,23 +93,23 @@ Ces tests doivent TOUJOURS passer après chaque modification :
 ## Déploiement et correction en production
 
 ### URL de production
-- **URL actuelle** : https://scoresheets-lime.vercel.app
-- **Dashboard Vercel** : https://vercel.com/dashboard (projet "scoresheets")
+- **URL actuelle** : [Variable VERCEL_URL ou voir dashboard Vercel]
+- **Dashboard Vercel** : https://vercel.com/dashboard
 
 ### Endpoints de maintenance en production
 
 ```bash
 # Vérifier la structure de la base de données
-curl https://scoresheets-lime.vercel.app/api/admin/check-db
+curl https://[YOUR_VERCEL_URL]/api/admin/check-db
 
 # Corriger la structure DB et droits admin (POST)
-curl -X POST https://scoresheets-lime.vercel.app/api/admin/check-db
+curl -X POST https://[YOUR_VERCEL_URL]/api/admin/check-db
 
-# Accorder droits admin à cryborg.live@gmail.com
-curl -X POST https://scoresheets-lime.vercel.app/api/admin/grant-admin
+# Accorder droits admin à l'utilisateur configuré
+curl -X POST https://[YOUR_VERCEL_URL]/api/admin/grant-admin
 
 # Déployer Belote en production
-curl -X POST https://scoresheets-lime.vercel.app/api/admin/deploy-belote
+curl -X POST https://[YOUR_VERCEL_URL]/api/admin/deploy-belote
 ```
 
 ### Problèmes courants en production
@@ -118,14 +118,14 @@ curl -X POST https://scoresheets-lime.vercel.app/api/admin/deploy-belote
 **Erreur :** `no such column: is_admin`
 **Solution :** 
 ```bash
-curl -X POST https://scoresheets-lime.vercel.app/api/admin/check-db
+curl -X POST https://[YOUR_VERCEL_URL]/api/admin/check-db
 ```
 
 #### 2. Utilisateur sans droits admin
 **Symptôme :** Pas d'accès à la page admin
 **Solution :**
 ```bash
-curl -X POST https://scoresheets-lime.vercel.app/api/admin/grant-admin
+curl -X POST https://[YOUR_VERCEL_URL]/api/admin/grant-admin
 ```
 Puis se déconnecter/reconnecter
 
@@ -133,7 +133,7 @@ Puis se déconnecter/reconnecter
 **Symptôme :** Belote/nouveau jeu non visible
 **Solution :**
 ```bash
-curl -X POST https://scoresheets-lime.vercel.app/api/admin/deploy-belote
+curl -X POST https://[YOUR_VERCEL_URL]/api/admin/deploy-belote
 ```
 
 #### 4. URL de déploiement inconnue
@@ -143,14 +143,39 @@ node scripts/check-deployment.js
 ```
 
 ### Comptes administrateurs
-- **Email :** cryborg.live@gmail.com  
-- **Mot de passe :** Célibataire1979$
+- **Email :** [Voir variables d'environnement]
+- **Mot de passe :** [Voir variables d'environnement]
 - **Droits :** Accès admin (is_admin = 1)
 
 ### Architecture base de données
 - **Production :** Turso (cloud SQLite)
 - **Développement :** SQLite local (file:./data/scoresheets.db)
 - **Migration automatique :** Voir `src/lib/database.ts` → `seedInitialData()`
+
+### Variables d'environnement requises
+
+#### Production (Vercel)
+```
+TURSO_DATABASE_URL=libsql://[votre-base].turso.io
+TURSO_AUTH_TOKEN=eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9...
+ADMIN_EMAIL=votre-email@example.com
+ADMIN_PASSWORD=VotreMotDePasseSecurise
+JWT_SECRET=votre-jwt-secret-long-et-complexe
+```
+
+#### Développement (.env.local)
+```
+# Base de données Turso
+TURSO_DATABASE_URL=file:./data/scoresheets.db
+# TURSO_AUTH_TOKEN non requis en local
+
+# Compte administrateur
+ADMIN_EMAIL=votre-email@example.com  
+ADMIN_PASSWORD=VotreMotDePasseSecurise
+
+# JWT pour l'authentification
+JWT_SECRET=votre-jwt-secret-long-et-complexe
+```
 
 ## Notes sur le projet
 

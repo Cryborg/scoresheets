@@ -7,21 +7,31 @@ export async function POST() {
     
     await initializeDatabase();
     
+    const adminEmail = process.env.ADMIN_EMAIL;
+    const adminPassword = process.env.ADMIN_PASSWORD;
+    
+    if (!adminEmail || !adminPassword) {
+      return NextResponse.json(
+        { error: 'Variables ADMIN_EMAIL et ADMIN_PASSWORD requises' }, 
+        { status: 500 }
+      );
+    }
+
     // Update admin status for the specific user
     const result = await db.execute({
       sql: 'UPDATE users SET is_admin = ? WHERE email = ?',
-      args: [1, 'cryborg.live@gmail.com']
+      args: [1, adminEmail]
     });
 
     if (result.rowsAffected === 0) {
       // User doesn't exist, let's create it
       console.log('👤 Utilisateur non trouvé, création...');
       const bcrypt = await import('bcrypt');
-      const hashedPassword = await bcrypt.hash('Célibataire1979$', 10);
+      const hashedPassword = await bcrypt.hash(adminPassword, 10);
       
       await db.execute({
         sql: `INSERT INTO users (username, email, password_hash, is_admin) VALUES (?, ?, ?, ?)`,
-        args: ['Admin', 'cryborg.live@gmail.com', hashedPassword, 1]
+        args: ['Admin', adminEmail, hashedPassword, 1]
       });
 
       console.log('✅ Utilisateur admin créé avec succès !');
@@ -33,7 +43,7 @@ export async function POST() {
     // Verify
     const verification = await db.execute({
       sql: 'SELECT email, is_admin FROM users WHERE email = ?',
-      args: ['cryborg.live@gmail.com']
+      args: [adminEmail]
     });
     
     const user = verification.rows[0];

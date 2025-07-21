@@ -78,27 +78,32 @@ export async function POST() {
     }
 
     // Update admin user
-    const result = await db.execute({
-      sql: 'UPDATE users SET is_admin = ? WHERE email = ?',
-      args: [1, 'cryborg.live@gmail.com']
-    });
-
-    if (result.rowsAffected === 0) {
-      // Create admin user if doesn't exist
-      const bcrypt = await import('bcrypt');
-      const hashedPassword = await bcrypt.hash('Célibataire1979$', 10);
-      
-      await db.execute({
-        sql: `INSERT INTO users (username, email, password_hash, is_admin) VALUES (?, ?, ?, ?)`,
-        args: ['Admin', 'cryborg.live@gmail.com', hashedPassword, 1]
+    const adminEmail = process.env.ADMIN_EMAIL;
+    const adminPassword = process.env.ADMIN_PASSWORD;
+    
+    if (adminEmail && adminPassword) {
+      const result = await db.execute({
+        sql: 'UPDATE users SET is_admin = ? WHERE email = ?',
+        args: [1, adminEmail]
       });
-      console.log('✅ Utilisateur admin créé');
-    } else {
-      console.log('✅ Droits admin accordés à l\'utilisateur existant');
+
+      if (result.rowsAffected === 0) {
+        // Create admin user if doesn't exist
+        const bcrypt = await import('bcrypt');
+        const hashedPassword = await bcrypt.hash(adminPassword, 10);
+        
+        await db.execute({
+          sql: `INSERT INTO users (username, email, password_hash, is_admin) VALUES (?, ?, ?, ?)`,
+          args: ['Admin', adminEmail, hashedPassword, 1]
+        });
+        console.log('✅ Utilisateur admin créé');
+      } else {
+        console.log('✅ Droits admin accordés à l\'utilisateur existant');
+      }
     }
 
     // Verify final structure
-    const finalCheck = await db.execute('SELECT id, username, email, is_admin FROM users WHERE email = ?', ['cryborg.live@gmail.com']);
+    const finalCheck = await db.execute('SELECT id, username, email, is_admin FROM users WHERE email = ?', [adminEmail || 'admin']);
     
     return NextResponse.json({
       message: 'Structure corrigée avec succès',

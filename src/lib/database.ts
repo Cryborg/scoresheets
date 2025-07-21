@@ -239,30 +239,35 @@ async function seedInitialData(): Promise<void> {
   }
 
   // Create admin user if it doesn't exist, or update existing user to admin
-  const existingAdmin = await tursoClient.execute({
-    sql: 'SELECT id, is_admin FROM users WHERE email = ?', 
-    args: ['cryborg.live@gmail.com']
-  });
+  const adminEmail = process.env.ADMIN_EMAIL;
+  const adminPassword = process.env.ADMIN_PASSWORD;
   
-  if (existingAdmin.rows.length === 0) {
-    // Create new admin user
-    const bcrypt = await import('bcrypt');
-    const hashedPassword = await bcrypt.hash('Célibataire1979$', 10);
-    
-    await tursoClient.execute({
-      sql: `INSERT INTO users (username, email, password_hash, is_admin) VALUES (?, ?, ?, ?)`,
-      args: ['Admin', 'cryborg.live@gmail.com', hashedPassword, 1]
+  if (adminEmail && adminPassword) {
+    const existingAdmin = await tursoClient.execute({
+      sql: 'SELECT id, is_admin FROM users WHERE email = ?', 
+      args: [adminEmail]
     });
-    console.log('✅ Admin user created');
-  } else {
-    // User exists, ensure admin rights
-    const user = existingAdmin.rows[0];
-    if (!user.is_admin) {
+    
+    if (existingAdmin.rows.length === 0) {
+      // Create new admin user
+      const bcrypt = await import('bcrypt');
+      const hashedPassword = await bcrypt.hash(adminPassword, 10);
+      
       await tursoClient.execute({
-        sql: 'UPDATE users SET is_admin = ? WHERE email = ?',
-        args: [1, 'cryborg.live@gmail.com']
+        sql: `INSERT INTO users (username, email, password_hash, is_admin) VALUES (?, ?, ?, ?)`,
+        args: ['Admin', adminEmail, hashedPassword, 1]
       });
-      console.log('✅ Admin rights granted to existing user');
+      console.log('✅ Admin user created');
+    } else {
+      // User exists, ensure admin rights
+      const user = existingAdmin.rows[0];
+      if (!user.is_admin) {
+        await tursoClient.execute({
+          sql: 'UPDATE users SET is_admin = ? WHERE email = ?',
+          args: [1, adminEmail]
+        });
+        console.log('✅ Admin rights granted to existing user');
+      }
     }
   }
 }

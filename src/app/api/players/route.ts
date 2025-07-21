@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db, initializeDatabase } from '@/lib/database-async';
+import { db, initializeDatabase } from '@/lib/database';
 
 function getUserIdFromRequest(request: NextRequest): number | null {
   const token = request.cookies.get('auth-token')?.value;
@@ -22,14 +22,14 @@ export async function GET(request: NextRequest) {
   try {
     await initializeDatabase();
     
-    const players = await db.prepare(`
+    const players = await db.execute({ sql: `
       SELECT player_name, games_played, last_played 
       FROM user_players 
       WHERE user_id = ? 
       ORDER BY games_played DESC, last_played DESC
-    `).all(userId);
+    `, args: [userId] });
 
-    return NextResponse.json({ players });
+    return NextResponse.json({ players: players.rows });
   } catch (error) {
     console.error('Error fetching players:', error);
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 });

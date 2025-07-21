@@ -2,14 +2,14 @@
  * @jest-environment node
  */
 
-import { NextRequest } from 'next/server';
+// import { NextRequest } from 'next/server'; // May be used in future tests
 import { GET } from '../../app/api/games/route';
 
 // Mock database
-jest.mock('../../lib/database-async', () => ({
+jest.mock('../../lib/database', () => ({
   db: {
-    prepare: jest.fn().mockReturnValue({
-      all: jest.fn().mockResolvedValue([
+    execute: jest.fn().mockResolvedValue({
+      rows: [
         {
           id: 1,
           name: 'Yams (Yahtzee)',
@@ -22,8 +22,21 @@ jest.mock('../../lib/database-async', () => ({
           max_players: 8,
           score_direction: 'higher',
           category_name: 'Jeux de dés'
+        },
+        {
+          id: 2,
+          name: 'Belote',
+          slug: 'belote',
+          rules: 'Test rules for Belote',
+          is_implemented: 1,
+          score_type: 'rounds',
+          team_based: 1,
+          min_players: 4,
+          max_players: 4,
+          score_direction: 'higher',
+          category_name: 'Jeux de cartes'
         }
-      ])
+      ]
     })
   },
   initializeDatabase: jest.fn().mockResolvedValue(undefined)
@@ -49,20 +62,30 @@ describe('/api/games', () => {
       const data = await response.json();
       expect(data).toHaveProperty('games');
       expect(Array.isArray(data.games)).toBe(true);
-      expect(data.games).toHaveLength(1);
-      expect(data.games[0]).toMatchObject({
+      expect(data.games).toHaveLength(2);
+      
+      // Check for Yams game
+      const yamsGame = data.games.find(g => g.slug === 'yams');
+      expect(yamsGame).toMatchObject({
         id: 1,
         name: 'Yams (Yahtzee)',
         slug: 'yams',
         is_implemented: 1
       });
+      
+      // Check for Belote game
+      const beloteGame = data.games.find(g => g.slug === 'belote');
+      expect(beloteGame).toMatchObject({
+        id: 2,
+        name: 'Belote',
+        slug: 'belote',
+        is_implemented: 1
+      });
     });
 
     it('should handle database errors gracefully', async () => {
-      const { db } = await import('../../lib/database-async');
-      jest.mocked(db.prepare).mockReturnValue({
-        all: jest.fn().mockRejectedValue(new Error('Database error'))
-      } as { all: jest.Mock });
+      const { db } = await import('../../lib/database');
+      jest.mocked(db.execute).mockRejectedValue(new Error('Database error'));
 
       const response = await GET();
       

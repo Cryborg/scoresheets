@@ -1,265 +1,242 @@
-// database.ts - Auto-switches between local SQLite and Turso
-import { createClient } from '@libsql/client';
-import Database from 'better-sqlite3';
-import { join } from 'path';
+// Unified database layer using Turso for both development and production
+import { createClient, Client } from '@libsql/client';
 import { existsSync, mkdirSync } from 'fs';
+import { join } from 'path';
 
-// Check if we should use Turso
-const useTurso = process.env.NODE_ENV === 'production' && process.env.TURSO_DATABASE_URL;
+// Environment detection
+const isProduction = process.env.NODE_ENV === 'production';
 
-interface DbResult {
-  lastInsertRowid: number;
-  changes: number;
-}
+// Create unified Turso client
+const tursoClient: Client = createClient({
+  url: isProduction 
+    ? (process.env.TURSO_DATABASE_URL || 'libsql://scoresheets-cryborg.aws-eu-west-1.turso.io')
+    : 'file:./data/scoresheets.db', // Local Turso database
+  authToken: isProduction ? process.env.TURSO_AUTH_TOKEN : undefined
+});
 
-interface DbStatement {
-  run(...params: any[]): DbResult;
-  get(...params: any[]): any;
-  all(...params: any[]): any[];
-}
-
-interface DbAdapter {
-  prepare(sql: string): DbStatement;
-  exec(sql: string): void;
-  transaction(fn: Function): Function;
-}
-
-let db: DbAdapter;
-
-if (useTurso) {
-  // Production with Turso
-  const tursoClient = createClient({
-    url: process.env.TURSO_DATABASE_URL!,
-    authToken: process.env.TURSO_AUTH_TOKEN!
-  });
-
-  // Create sync-like wrapper for Turso
-  db = {
-    prepare: (sql: string) => ({
-      run: (...params: any[]): DbResult => {
-        // Use a synchronous approach with a promise-based hack for edge runtime compatibility
-        let result: any = { lastInsertRowid: 0, changes: 0 };
-        const promise = tursoClient.execute({ sql, args: params }).then(r => {
-          result = { lastInsertRowid: Number(r.lastInsertRowId), changes: r.rowsAffected };
-        });
-        
-        // For edge runtime, we need to handle this differently
-        if (typeof EdgeRuntime !== 'undefined') {
-          throw new Error('Use async database operations in edge runtime');
-        }
-        
-        // This is a hack to make async sync in Node.js runtime
-        require('child_process').execSync('node -e "process.exit(0)"', { timeout: 0.1 });
-        return result;
-      },
-      get: (...params: any[]) => {
-        let result: any;
-        tursoClient.execute({ sql, args: params }).then(r => {
-          result = r.rows[0] || undefined;
-        });
-        return result;
-      },
-      all: (...params: any[]): any[] => {
-        let result: any[] = [];
-        tursoClient.execute({ sql, args: params }).then(r => {
-          result = r.rows;
-        });
-        return result;
-      }
-    }),
-    exec: (sql: string) => {
-      const statements = sql.split(';').filter(s => s.trim());
-      for (const statement of statements) {
-        if (statement.trim()) {
-          tursoClient.execute(statement);
-        }
-      }
+// Backward compatibility wrapper for db.prepare() API
+// TODO: Remove once all routes migrate to db.execute()
+const legacyWrapper = {
+  execute: tursoClient.execute.bind(tursoClient),
+  prepare: (sql: string) => ({
+    get: async (...params: any[]) => {
+      const result = await tursoClient.execute({ sql, args: params });
+      return result.rows[0];
     },
-    transaction: (fn: Function) => fn
-  };
-} else {
-  // Local development with SQLite
-  const dataDir = join(process.cwd(), 'data');
-  if (!existsSync(dataDir)) {
-    mkdirSync(dataDir, { recursive: true });
-  }
-  
-  const dbPath = join(dataDir, 'scoresheets.db');
-  const sqliteDb = new Database(dbPath);
-  
-  db = {
-    prepare: (sql: string) => {
-      const stmt = sqliteDb.prepare(sql);
+    all: async (...params: any[]) => {
+      const result = await tursoClient.execute({ sql, args: params });
+      return result.rows;
+    },
+    run: async (...params: any[]) => {
+      const result = await tursoClient.execute({ sql, args: params });
       return {
-        run: (...params: any[]): DbResult => {
-          const result = stmt.run(...params);
-          return {
-            lastInsertRowid: Number(result.lastInsertRowid),
-            changes: result.changes
-          };
-        },
-        get: (...params: any[]) => stmt.get(...params),
-        all: (...params: any[]): any[] => stmt.all(...params)
+        lastInsertRowid: Number(result.lastInsertRowId),
+        changes: result.rowsAffected
       };
-    },
-    exec: (sql: string) => sqliteDb.exec(sql),
-    transaction: (fn: Function) => sqliteDb.transaction(fn)
-  };
+    }
+  })
+};
+
+// Database initialization
+export async function initializeDatabase(): Promise<void> {
+  try {
+    // Ensure data directory exists for local development
+    if (!isProduction) {
+      const dataDir = join(process.cwd(), 'data');
+      if (!existsSync(dataDir)) {
+        mkdirSync(dataDir, { recursive: true });
+      }
+    }
+
+    // Create tables
+    await tursoClient.execute(`
+      CREATE TABLE IF NOT EXISTS game_categories (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT UNIQUE NOT NULL,
+        description TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    await tursoClient.execute(`
+      CREATE TABLE IF NOT EXISTS games (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT UNIQUE NOT NULL,
+        slug TEXT UNIQUE NOT NULL,
+        category_id INTEGER,
+        rules TEXT,
+        is_implemented BOOLEAN DEFAULT FALSE,
+        score_type TEXT DEFAULT 'rounds',
+        team_based BOOLEAN DEFAULT FALSE,
+        min_players INTEGER DEFAULT 2,
+        max_players INTEGER DEFAULT 6,
+        score_direction TEXT DEFAULT 'higher',
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (category_id) REFERENCES game_categories(id)
+      )
+    `);
+
+    await tursoClient.execute(`
+      CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT UNIQUE NOT NULL,
+        email TEXT UNIQUE NOT NULL,
+        password_hash TEXT NOT NULL,
+        is_admin BOOLEAN DEFAULT FALSE,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    await tursoClient.execute(`
+      CREATE TABLE IF NOT EXISTS game_sessions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        session_name TEXT NOT NULL,
+        game_id INTEGER,
+        user_id INTEGER NOT NULL,
+        has_score_target BOOLEAN DEFAULT FALSE,
+        score_target INTEGER DEFAULT 0,
+        finish_current_round BOOLEAN DEFAULT FALSE,
+        score_direction TEXT DEFAULT 'higher',
+        date_played DATETIME DEFAULT CURRENT_TIMESTAMP,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (game_id) REFERENCES games(id),
+        FOREIGN KEY (user_id) REFERENCES users(id)
+      )
+    `);
+
+    await tursoClient.execute(`
+      CREATE TABLE IF NOT EXISTS players (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        session_id INTEGER NOT NULL,
+        name TEXT NOT NULL,
+        position INTEGER DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (session_id) REFERENCES game_sessions(id) ON DELETE CASCADE
+      )
+    `);
+
+    await tursoClient.execute(`
+      CREATE TABLE IF NOT EXISTS scores (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        session_id INTEGER NOT NULL,
+        player_id INTEGER NOT NULL,
+        round_number INTEGER,
+        score_type TEXT DEFAULT 'round',
+        score_value INTEGER DEFAULT 0,
+        details TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (session_id) REFERENCES game_sessions(id) ON DELETE CASCADE,
+        FOREIGN KEY (player_id) REFERENCES players(id) ON DELETE CASCADE
+      )
+    `);
+
+    await tursoClient.execute(`
+      CREATE TABLE IF NOT EXISTS user_players (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        player_name TEXT NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        UNIQUE(user_id, player_name)
+      )
+    `);
+
+    await tursoClient.execute(`
+      CREATE TABLE IF NOT EXISTS game_migrations (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        migration_name TEXT UNIQUE NOT NULL,
+        applied_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Seed initial data
+    await seedInitialData();
+
+    console.log('✅ Database initialized successfully');
+  } catch (error) {
+    console.error('❌ Database initialization failed:', error);
+    throw error;
+  }
 }
 
-db.exec(`
-  CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    username TEXT UNIQUE NOT NULL,
-    email TEXT UNIQUE NOT NULL,
-    password_hash TEXT NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  );
+async function seedInitialData(): Promise<void> {
+  // Check if we already have categories
+  const existingCategories = await tursoClient.execute('SELECT COUNT(*) as count FROM game_categories');
+  const categoryCount = existingCategories.rows[0]?.count as number || 0;
 
-  CREATE TABLE IF NOT EXISTS game_categories (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL UNIQUE,
-    parent_id INTEGER,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (parent_id) REFERENCES game_categories (id)
-  );
+  if (categoryCount === 0) {
+    await tursoClient.execute(`
+      INSERT INTO game_categories (name, description) VALUES
+      ('Jeux de cartes', 'Jeux utilisant des cartes traditionnelles'),
+      ('Jeux de dés', 'Jeux utilisant des dés'),
+      ('Jeux de plateau', 'Jeux de société classiques')
+    `);
+  }
 
-  CREATE TABLE IF NOT EXISTS games (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL UNIQUE,
-    slug TEXT NOT NULL UNIQUE,
-    category_id INTEGER NOT NULL,
-    rules TEXT,
-    is_implemented BOOLEAN DEFAULT FALSE,
-    score_type TEXT DEFAULT 'rounds', -- 'rounds', 'categories', 'contracts'
-    team_based BOOLEAN DEFAULT FALSE,
-    min_players INTEGER DEFAULT 2,
-    max_players INTEGER DEFAULT 6,
-    score_direction TEXT DEFAULT 'higher', -- 'higher' or 'lower' - determines if higher scores are better
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (category_id) REFERENCES game_categories (id)
-  );
+  // Check if we already have games
+  const existingGames = await tursoClient.execute('SELECT COUNT(*) as count FROM games');
+  const gameCount = existingGames.rows[0]?.count as number || 0;
 
-  CREATE TABLE IF NOT EXISTS game_sessions (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER NOT NULL,
-    game_id INTEGER,
-    session_name TEXT,
-    has_score_target BOOLEAN DEFAULT FALSE,
-    score_target INTEGER,
-    finish_current_round BOOLEAN DEFAULT FALSE,
-    score_direction TEXT DEFAULT 'higher',
-    date_played DATETIME DEFAULT CURRENT_TIMESTAMP,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users (id),
-    FOREIGN KEY (game_id) REFERENCES games (id)
-  );
+  if (gameCount === 0) {
+    // Add Yams
+    await tursoClient.execute(`
+      INSERT INTO games (name, slug, category_id, rules, is_implemented, score_type, team_based, min_players, max_players, score_direction)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `, [
+      'Yams (Yahtzee)',
+      'yams',
+      2, // Jeux de dés
+      'Jeu de dés classique avec 5 dés. Objectif: réaliser des combinaisons pour marquer le maximum de points dans chaque catégorie.',
+      1, // is_implemented
+      'categories',
+      0, // team_based
+      2, // min_players
+      6, // max_players
+      'higher'
+    ]);
 
-  CREATE TABLE IF NOT EXISTS players (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    session_id INTEGER NOT NULL,
-    name TEXT NOT NULL,
-    position INTEGER NOT NULL,
-    FOREIGN KEY (session_id) REFERENCES game_sessions (id)
-  );
+    // Add Belote
+    await tursoClient.execute(`
+      INSERT INTO games (name, slug, category_id, rules, is_implemented, score_type, team_based, min_players, max_players, score_direction)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `, [
+      'Belote',
+      'belote',
+      1, // Jeux de cartes
+      'Jeu de cartes français classique se jouant en équipes de 2 avec un jeu de 32 cartes. Objectif: être la première équipe à atteindre 501 points.',
+      1, // is_implemented
+      'rounds',
+      1, // team_based
+      4, // min_players
+      4, // max_players
+      'higher'
+    ]);
+  }
 
-  CREATE TABLE IF NOT EXISTS scores (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    session_id INTEGER NOT NULL,
-    player_id INTEGER NOT NULL,
-    round_number INTEGER NOT NULL,
-    score_type TEXT NOT NULL,
-    score_value INTEGER NOT NULL,
-    details TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (session_id) REFERENCES game_sessions (id),
-    FOREIGN KEY (player_id) REFERENCES players (id)
-  );
-
-  CREATE TABLE IF NOT EXISTS user_players (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER NOT NULL,
-    player_name TEXT NOT NULL,
-    games_played INTEGER DEFAULT 0,
-    last_played DATETIME,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(user_id, player_name),
-    FOREIGN KEY (user_id) REFERENCES users (id)
-  );
-`);
-
-// Add score_direction column if it doesn't exist (migration)
-try {
-  db.exec(`ALTER TABLE games ADD COLUMN score_direction TEXT DEFAULT 'higher'`);
-} catch (error) {
-  // Column already exists, ignore error
+  // Create admin user if it doesn't exist
+  const existingAdmin = await tursoClient.execute({
+    sql: 'SELECT id FROM users WHERE email = ?', 
+    args: ['cryborg.live@gmail.com']
+  });
+  if (existingAdmin.rows.length === 0) {
+    const bcrypt = await import('bcrypt');
+    const hashedPassword = await bcrypt.hash('Célibataire1979$', 10);
+    
+    await tursoClient.execute({
+      sql: `INSERT INTO users (username, email, password_hash, is_admin) VALUES (?, ?, ?, ?)`,
+      args: ['Admin', 'cryborg.live@gmail.com', hashedPassword, 1]
+    });
+  }
 }
 
-// Add missing columns to game_sessions table if they don't exist (migration)
-try {
-  db.exec(`ALTER TABLE game_sessions ADD COLUMN has_score_target BOOLEAN DEFAULT FALSE`);
-} catch (error) {
-  // Column already exists, ignore error
-}
-try {
-  db.exec(`ALTER TABLE game_sessions ADD COLUMN score_target INTEGER`);
-} catch (error) {
-  // Column already exists, ignore error
-}
-try {
-  db.exec(`ALTER TABLE game_sessions ADD COLUMN finish_current_round BOOLEAN DEFAULT FALSE`);
-} catch (error) {
-  // Column already exists, ignore error
-}
-try {
-  db.exec(`ALTER TABLE game_sessions ADD COLUMN score_direction TEXT DEFAULT 'higher'`);
-} catch (error) {
-  // Column already exists, ignore error
-}
+// Export the backward compatibility wrapper
+export const db = legacyWrapper;
 
-// Clean database: keep only Yams which has unique scoring system
-// Remove all other games and their related data to avoid foreign key constraints
-db.exec(`
-  DELETE FROM scores WHERE session_id IN (
-    SELECT gs.id FROM game_sessions gs 
-    JOIN games g ON gs.game_id = g.id 
-    WHERE g.slug <> 'yams'
-  );
-  
-  DELETE FROM players WHERE session_id IN (
-    SELECT gs.id FROM game_sessions gs 
-    JOIN games g ON gs.game_id = g.id 
-    WHERE g.slug <> 'yams'
-  );
-  
-  DELETE FROM game_sessions WHERE game_id IN (
-    SELECT id FROM games WHERE slug <> 'yams'
-  );
-  
-  DELETE FROM games WHERE slug <> 'yams';
-`);
-
-db.exec(`
-  INSERT OR IGNORE INTO game_categories (name) VALUES 
-    ('Jeux de cartes'),
-    ('Jeux de dés'),
-    ('Jeux de plis');
-  
-  INSERT OR IGNORE INTO games (name, slug, category_id, rules, is_implemented, score_type, team_based, min_players, max_players, score_direction) VALUES 
-    ('Yams (Yahtzee)', 'yams', 2, '**OBJECTIF :** Obtenir le maximum de points en réalisant des combinaisons avec 5 dés en 13 catégories.
-
-**MATÉRIEL :** 5 dés, feuille de score. Se joue à 1+ joueurs.
-
-**DÉROULEMENT :**
-1. Lancer les 5 dés
-2. Garder les dés souhaités, relancer les autres (max 3 lancers)
-3. Inscrire le résultat dans une catégorie au choix (une seule fois par catégorie)
-
-**CATÉGORIES :**
-- **Section supérieure :** Somme des 1, 2, 3, 4, 5, 6 (bonus +35 si total ≥63)
-- **Section inférieure :** Brelan (somme des dés), Carré (somme), Full (25 pts), Petite suite (30 pts), Grande suite (40 pts), Yams (50 pts), Chance (somme)
-
-**FIN DE PARTIE :** Après 13 tours (toutes les catégories remplies). Le plus haut score gagne.', TRUE, 'categories', FALSE, 1, 8, 'higher');
-`);
-
-export default db;
+// Export unified database instance for new code
+export default tursoClient;

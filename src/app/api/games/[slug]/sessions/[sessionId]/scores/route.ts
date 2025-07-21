@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/database-async';
+import { db } from '@/lib/database';
 import { getAuthenticatedUserId, unauthorizedResponse } from '@/lib/auth';
 
 export async function POST(

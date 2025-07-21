@@ -24,6 +24,12 @@ html:not(.dark) .text-gray-900 {
   color: rgb(17 24 39 / var(--tw-text-opacity));
 }
 
+/* Hover states in light mode - visible but not too dark */
+html:not(.dark) .hover\:bg-gray-50:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(245 245 245 / var(--tw-bg-opacity)) !important;
+}
+
 /* Dark theme */
 html.dark {
   --tw-bg-opacity: 1;

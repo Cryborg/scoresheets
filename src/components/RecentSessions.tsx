@@ -35,8 +35,11 @@ export default function RecentSessions({
 }: RecentSessionsProps) {
   const [expandedGames, setExpandedGames] = useState<Set<string>>(new Set());
 
+  // Ensure sessions is an array
+  const sessionsArray = Array.isArray(sessions) ? sessions : [];
+
   // Group sessions by game
-  const sessionsByGame = sessions.reduce((acc, session) => {
+  const sessionsByGame = sessionsArray.reduce((acc, session) => {
     const gameName = session.game_name || 'Jeu générique';
     if (!acc[gameName]) {
       acc[gameName] = [];

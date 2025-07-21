@@ -1,5 +1,5 @@
 import bcrypt from 'bcrypt';
-import { db, initializeDatabase } from './database-async';
+import { db, initializeDatabase } from './database';
 
 interface AuthCredentials {
   email: string;
@@ -10,6 +10,7 @@ interface User {
   id: number;
   username: string;
   email: string;
+  is_admin?: boolean;
 }
 
 export async function authenticateUser({ email, password }: AuthCredentials): Promise<User | null> {
@@ -17,7 +18,20 @@ export async function authenticateUser({ email, password }: AuthCredentials): Pr
     // Initialize database if needed
     await initializeDatabase();
     
-    const user = await db.prepare('SELECT * FROM users WHERE email = ?').get(email) as any;
+    const result = await db.execute({
+      sql: 'SELECT * FROM users WHERE email = ?',
+      args: [email]
+    });
+    
+    const user = result.rows[0] as { 
+      id: number; 
+      email: string; 
+      password_hash: string; 
+      username: string; 
+      is_admin: number; 
+      created_at: string; 
+      updated_at: string; 
+    } | undefined;
     
     if (!user) {
       return null;
@@ -32,7 +46,8 @@ export async function authenticateUser({ email, password }: AuthCredentials): Pr
     return {
       id: user.id,
       username: user.username,
-      email: user.email
+      email: user.email,
+      is_admin: Boolean(user.is_admin)
     };
   } catch (error) {
     console.error('Authentication error:', error);
@@ -44,7 +59,20 @@ export async function getUserByEmail(email: string): Promise<User | null> {
   try {
     await initializeDatabase();
     
-    const user = await db.prepare('SELECT * FROM users WHERE email = ?').get(email) as any;
+    const result = await db.execute({
+      sql: 'SELECT * FROM users WHERE email = ?',
+      args: [email]
+    });
+    
+    const user = result.rows[0] as { 
+      id: number; 
+      email: string; 
+      password_hash: string; 
+      username: string; 
+      is_admin: number; 
+      created_at: string; 
+      updated_at: string; 
+    } | undefined;
     
     if (!user) {
       return null;
@@ -53,7 +81,8 @@ export async function getUserByEmail(email: string): Promise<User | null> {
     return {
       id: user.id,
       username: user.username,
-      email: user.email
+      email: user.email,
+      is_admin: Boolean(user.is_admin)
     };
   } catch (error) {
     console.error('Get user by email error:', error);
@@ -67,13 +96,13 @@ export async function createUser({ username, email, password }: { username: stri
     
     const passwordHash = await bcrypt.hash(password, 10);
     
-    const result = await db.prepare(`
-      INSERT INTO users (username, email, password_hash)
-      VALUES (?, ?, ?)
-    `).run(username, email, passwordHash);
+    const result = await db.execute({
+      sql: `INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)`,
+      args: [username, email, passwordHash]
+    });
 
     return {
-      id: result.lastInsertRowid,
+      id: Number(result.lastInsertRowId),
       username,
       email
     };

@@ -31,7 +31,7 @@ export default function ScoreInput({
   disabled = false,
   showButtons = true,
   showSaveButton = false,
-  autoSaveOnButtons = true,
+  // autoSaveOnButtons = true, // Reserved for future auto-save feature
   size = 'md',
   className = '',
   placeholder

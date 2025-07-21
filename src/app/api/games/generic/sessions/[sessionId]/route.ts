@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db, initializeDatabase } from '@/lib/database-async';
+import { db, initializeDatabase } from '@/lib/database';
 import { getAuthenticatedUserId, unauthorizedResponse } from '@/lib/auth';
 
 export async function GET(
@@ -30,7 +30,7 @@ export async function GET(
         gs.score_direction
       FROM game_sessions gs
       WHERE gs.id = ? AND gs.user_id = ? AND gs.game_id IS NULL
-    `).get(sessionId, userId) as any;
+    `).get(sessionId, userId) as { id: number; session_name: string; date_played: string; has_score_target: number; score_target: number; finish_current_round: number; score_direction: string } | undefined;
 
     if (!session) {
       return NextResponse.json({ error: 'Partie non trouvée' }, { status: 404 });
@@ -52,7 +52,7 @@ export async function GET(
       ORDER BY round_number
     `);
 
-    const rounds = await roundsQuery.all(sessionId) as any[];
+    const rounds = await roundsQuery.all(sessionId) as { round_number: number }[];
 
     const sessionData = {
       id: session.id,
@@ -71,9 +71,9 @@ export async function GET(
         SELECT player_id, score_value
         FROM scores
         WHERE session_id = ? AND round_number = ?
-      `).all(sessionId, round.round_number) as any[];
+      `).all(sessionId, round.round_number) as { player_id: number; score_value: number }[];
 
-      const scores = roundScores.reduce((acc: any, score: any) => {
+      const scores = roundScores.reduce((acc: Record<number, number>, score) => {
         acc[score.player_id] = score.score_value;
         return acc;
       }, {});

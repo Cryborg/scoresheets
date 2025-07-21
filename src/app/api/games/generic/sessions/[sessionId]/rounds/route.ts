@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db, initializeDatabase } from '@/lib/database-async';
+import { db, initializeDatabase } from '@/lib/database';
 import { getAuthenticatedUserId, unauthorizedResponse } from '@/lib/auth';
 
 export async function POST(
@@ -34,7 +34,7 @@ export async function POST(
       SELECT MAX(round_number) as max_round
       FROM scores
       WHERE session_id = ?
-    `).get(sessionId) as any;
+    `).get(sessionId) as { max_round: number } | undefined;
 
     const roundNumber = (lastRound?.max_round || 0) + 1;
 

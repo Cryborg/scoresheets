@@ -16,6 +16,9 @@ const gameComponents: Record<string, ComponentType<ScoreSheetProps>> = {
   'yams': dynamic(() => import('@/components/scoresheets/YamsScoreSheet'), {
     loading: LoadingComponent
   }),
+  'belote': dynamic(() => import('@/components/scoresheets/BeloteScoreSheet'), {
+    loading: LoadingComponent
+  }),
   // Tous les autres jeux utilisent maintenant le système générique
 };
 

@@ -8,279 +8,466 @@
    - Environments: .env.local
 
  ✓ Starting...
- ✓ Compiled middleware in 72ms
- ✓ Ready in 1004ms
- ○ Compiling /auth/login ...
- ✓ Compiled /auth/login in 1480ms
- GET /auth/login 200 in 101ms
- ✓ Compiled /favicon.ico in 126ms
- GET /favicon.ico?favicon.45db1c09.ico 200 in 402ms
- ✓ Compiled /api/auth/login in 154ms
-Authentication attempt for: test@example.com Result: Success
- POST /api/auth/login 200 in 261ms
- ✓ Compiled /dashboard in 202ms
- GET /dashboard 200 in 234ms
- ✓ Compiled /api/sessions in 173ms
- GET /api/games 200 in 263ms
- GET /api/sessions 200 in 296ms
- GET /api/games 200 in 32ms
- GET /api/sessions 200 in 35ms
- GET /api/games 200 in 19ms
- GET /api/sessions 200 in 22ms
- ✓ Compiled /games/custom/new in 162ms
- GET /games/custom/new 200 in 181ms
- ✓ Compiled /api/game-categories in 70ms
- GET /api/game-categories 200 in 91ms
- GET /api/game-categories 200 in 26ms
- ✓ Compiled /api/games/custom in 47ms
-Create game request: {
-  name: 'Mille sabords',
-  slug: 'mille-sabords',
-  categoryId: 2,
-  rules: 'Règles pour Mille sabords',
-  teamBased: false,
-  minPlayers: 2,
-  maxPlayers: 6
-}
- POST /api/games/custom 200 in 66ms
- ✓ Compiled /games/[slug]/new in 135ms
- GET /games/mille-sabords/new 200 in 442ms
- GET /api/games 200 in 36ms
- GET /api/games 200 in 70ms
- ○ Compiling /api/players ...
- ✓ Compiled /api/players in 594ms
- GET /api/players 200 in 867ms
- GET /api/players 200 in 50ms
- GET /api/players 200 in 15ms
- GET /api/players 200 in 16ms
- ✓ Compiled /api/games/[slug]/sessions in 77ms
-Error: Route "/api/games/[slug]/sessions" used `params.slug`. `params` should be awaited before using its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
-    at POST (src/app/api/games/[slug]/sessions/route.ts:17:12)
-  15 |
-  16 |     const { sessionName, players, teams, hasScoreTarget, scoreTarget, finishCurrentRound } = await request.json();
-> 17 |     const { slug } = params;
-     |            ^
-  18 |
-  19 |     // Get game info
-  20 |     const game = db.prepare('SELECT * FROM games WHERE slug = ?').get(slug) as any;
-Create session error: TypeError: SQLite3 can only bind numbers, strings, bigints, buffers, and null
-    at POST (src/app/api/games/[slug]/sessions/route.ts:57:40)
-  55 |     `);
-  56 |
-> 57 |     const sessionResult = insertSession.run(
-     |                                        ^
-  58 |       userId, 
-  59 |       game.id, 
-  60 |       sessionName, 
- POST /api/games/mille-sabords/sessions 500 in 514ms
- GET /games/mille-sabords/new 200 in 110ms
- GET /api/games 200 in 57ms
- GET /api/games 200 in 45ms
- GET /api/games 200 in 49ms
- GET /api/players 200 in 16ms
- GET /api/players 200 in 17ms
- GET /api/players 200 in 16ms
- GET /api/players 200 in 13ms
- GET /favicon.ico?favicon.45db1c09.ico 200 in 248ms
-Create session request: {
-  slug: 'mille-sabords',
-  sessionName: 'Partie de Mille sabords',
-  players: [ 'Didi', 'Joe' ],
-  hasScoreTarget: false,
-  scoreTarget: null,
-  finishCurrentRound: false
-}
- POST /api/games/mille-sabords/sessions 200 in 88ms
- ✓ Compiled /games/[slug]/[sessionId] in 135ms
- ⨯ ./src/lib/gameComponentLoader.ts:14:8
-Parsing ecmascript source code failed
-[0m [90m 12 |[39m
- [90m 13 |[39m [36mconst[39m [33mLoadingComponent[39m [33m=[39m () [33m=>[39m (
-[31m[1m>[22m[39m[90m 14 |[39m   [33m<[39m[33mdiv[39m className[33m=[39m[32m"text-center py-8"[39m[33m>[39m[33mChargement[39m de la feuille de score[33m...[39m[33m<[39m[33m/[39m[33mdiv[39m[33m>[39m
- [90m    |[39m        [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
- [90m 15 |[39m )[33m;[39m
- [90m 16 |[39m
- [90m 17 |[39m [90m// Import générique pour les jeux simples[39m[0m
-
-Expected '>', got 'className'
-
-Import traces:
-  Client Component Browser:
-    ./src/lib/gameComponentLoader.ts [Client Component Browser]
-    ./src/app/games/[slug]/[sessionId]/page.tsx [Client Component Browser]
-    ./src/app/games/[slug]/[sessionId]/page.tsx [Server Component]
-
-  Client Component SSR:
-    ./src/lib/gameComponentLoader.ts [Client Component SSR]
-    ./src/app/games/[slug]/[sessionId]/page.tsx [Client Component SSR]
-    ./src/app/games/[slug]/[sessionId]/page.tsx [Server Component]
-
-
- ○ Compiling /_error ...
- ✓ Compiled /_error in 604ms
- GET /games/mille-sabords/1 500 in 827ms
- ⨯ ./src/lib/gameComponentLoader.ts:14:8
-Parsing ecmascript source code failed
-[0m [90m 12 |[39m
- [90m 13 |[39m [36mconst[39m [33mLoadingComponent[39m [33m=[39m () [33m=>[39m (
-[31m[1m>[22m[39m[90m 14 |[39m   [33m<[39m[33mdiv[39m className[33m=[39m[32m"text-center py-8"[39m[33m>[39m[33mChargement[39m de la feuille de score[33m...[39m[33m<[39m[33m/[39m[33mdiv[39m[33m>[39m
- [90m    |[39m        [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
- [90m 15 |[39m )[33m;[39m
- [90m 16 |[39m
- [90m 17 |[39m [90m// Import générique pour les jeux simples[39m[0m
-
-Expected '>', got 'className'
-
-Import traces:
-  Client Component Browser:
-    ./src/lib/gameComponentLoader.ts [Client Component Browser]
-    ./src/app/games/[slug]/[sessionId]/page.tsx [Client Component Browser]
-    ./src/app/games/[slug]/[sessionId]/page.tsx [Server Component]
-
-  Client Component SSR:
-    ./src/lib/gameComponentLoader.ts [Client Component SSR]
-    ./src/app/games/[slug]/[sessionId]/page.tsx [Client Component SSR]
-    ./src/app/games/[slug]/[sessionId]/page.tsx [Server Component]
-
-
- GET /games/mille-sabords/1 500 in 15ms
- GET /favicon.ico 500 in 49ms
- ✓ Compiled /games/[slug]/[sessionId] in 21ms
- GET /games/mille-sabords/1 200 in 583ms
- ✓ Compiled /api/games/all in 130ms
- GET /api/games/all 200 in 175ms
- GET /api/games/all 200 in 19ms
- GET /api/games/all 200 in 26ms
- GET /favicon.ico?favicon.45db1c09.ico 200 in 246ms
- ✓ Compiled /api/games/[slug]/sessions/[sessionId] in 49ms
-Error: Route "/api/games/[slug]/sessions/[sessionId]" used `params.sessionId`. `params` should be awaited before using its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
-    at GET (src/app/api/games/[slug]/sessions/[sessionId]/route.ts:16:12)
-  14 |     }
-  15 |
-> 16 |     const { sessionId, slug } = params;
-     |            ^
-  17 |
-  18 |     // Get game info
-  19 |     const game = db.prepare('SELECT * FROM games WHERE slug = ?').get(slug) as any;
-Error: Route "/api/games/[slug]/sessions/[sessionId]" used `params.slug`. `params` should be awaited before using its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
-    at GET (src/app/api/games/[slug]/sessions/[sessionId]/route.ts:16:23)
-  14 |     }
-  15 |
-> 16 |     const { sessionId, slug } = params;
-     |                       ^
-  17 |
-  18 |     // Get game info
-  19 |     const game = db.prepare('SELECT * FROM games WHERE slug = ?').get(slug) as any;
- GET /api/games/mille-sabords/sessions/1 200 in 397ms
-Error: Route "/api/games/[slug]/sessions/[sessionId]" used `params.sessionId`. `params` should be awaited before using its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
-    at GET (src/app/api/games/[slug]/sessions/[sessionId]/route.ts:16:12)
-  14 |     }
-  15 |
-> 16 |     const { sessionId, slug } = params;
-     |            ^
-  17 |
-  18 |     // Get game info
-  19 |     const game = db.prepare('SELECT * FROM games WHERE slug = ?').get(slug) as any;
-Error: Route "/api/games/[slug]/sessions/[sessionId]" used `params.slug`. `params` should be awaited before using its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
-    at GET (src/app/api/games/[slug]/sessions/[sessionId]/route.ts:16:23)
-  14 |     }
-  15 |
-> 16 |     const { sessionId, slug } = params;
-     |                       ^
-  17 |
-  18 |     // Get game info
-  19 |     const game = db.prepare('SELECT * FROM games WHERE slug = ?').get(slug) as any;
- GET /api/games/mille-sabords/sessions/1 200 in 87ms
- ✓ Compiled /api/games/[slug]/sessions/[sessionId]/rounds in 63ms
-Error: Route "/api/games/[slug]/sessions/[sessionId]/rounds" used `params.sessionId`. `params` should be awaited before using its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
-    at POST (src/app/api/games/[slug]/sessions/[sessionId]/rounds/route.ts:16:12)
-  14 |     }
-  15 |
-> 16 |     const { sessionId, slug } = params;
-     |            ^
-  17 |     const { scores } = await request.json();
-  18 |
-  19 |     // Verify session ownership
-Error: Route "/api/games/[slug]/sessions/[sessionId]/rounds" used `params.slug`. `params` should be awaited before using its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
-    at POST (src/app/api/games/[slug]/sessions/[sessionId]/rounds/route.ts:16:23)
-  14 |     }
-  15 |
-> 16 |     const { sessionId, slug } = params;
-     |                       ^
-  17 |     const { scores } = await request.json();
-  18 |
-  19 |     // Verify session ownership
- POST /api/games/mille-sabords/sessions/1/rounds 200 in 430ms
- GET /api/games/mille-sabords/sessions/1 200 in 59ms
-Error: Route "/api/games/[slug]/sessions/[sessionId]/rounds" used `params.sessionId`. `params` should be awaited before using its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
-    at POST (src/app/api/games/[slug]/sessions/[sessionId]/rounds/route.ts:16:12)
-  14 |     }
-  15 |
-> 16 |     const { sessionId, slug } = params;
-     |            ^
-  17 |     const { scores } = await request.json();
-  18 |
-  19 |     // Verify session ownership
-Error: Route "/api/games/[slug]/sessions/[sessionId]/rounds" used `params.slug`. `params` should be awaited before using its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
-    at POST (src/app/api/games/[slug]/sessions/[sessionId]/rounds/route.ts:16:23)
-  14 |     }
-  15 |
-> 16 |     const { sessionId, slug } = params;
-     |                       ^
-  17 |     const { scores } = await request.json();
-  18 |
-  19 |     // Verify session ownership
- POST /api/games/mille-sabords/sessions/1/rounds 200 in 136ms
- GET /api/games/mille-sabords/sessions/1 200 in 36ms
-Error: Route "/api/games/[slug]/sessions/[sessionId]/rounds" used `params.sessionId`. `params` should be awaited before using its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
-    at POST (src/app/api/games/[slug]/sessions/[sessionId]/rounds/route.ts:16:12)
-  14 |     }
-  15 |
-> 16 |     const { sessionId, slug } = params;
-     |            ^
-  17 |     const { scores } = await request.json();
-  18 |
-  19 |     // Verify session ownership
-Error: Route "/api/games/[slug]/sessions/[sessionId]/rounds" used `params.slug`. `params` should be awaited before using its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
-    at POST (src/app/api/games/[slug]/sessions/[sessionId]/rounds/route.ts:16:23)
-  14 |     }
-  15 |
-> 16 |     const { sessionId, slug } = params;
-     |                       ^
-  17 |     const { scores } = await request.json();
-  18 |
-  19 |     // Verify session ownership
- POST /api/games/mille-sabords/sessions/1/rounds 200 in 91ms
- GET /api/games/mille-sabords/sessions/1 200 in 12ms
- ✓ Compiled in 23ms
- ✓ Compiled in 18ms
- ✓ Compiled in 53ms
- GET /dashboard 200 in 48ms
- GET /api/sessions 200 in 48ms
- GET /api/games 200 in 56ms
- GET /api/sessions 200 in 41ms
- GET /api/games 200 in 39ms
- GET /games/rami/new 200 in 43ms
- GET /api/games 200 in 46ms
+ ✓ Compiled middleware in 97ms
+ ✓ Ready in 1055ms
+ ○ Compiling /api/games ...
+ ✓ Compiled /api/games in 604ms
+API /api/games: Starting request
+API /api/games: Error fetching games: TypeError: SQLite3 can only bind numbers, strings, bigints, buffers, and null
+    at Object.run (src/lib/database-async.ts:82:30)
+    at initializeDatabase (src/lib/database-async.ts:244:7)
+    at async GET (src/app/api/games/route.ts:7:4)
+  80 |       return {
+  81 |         run: async (...params: any[]): Promise<DbResult> => {
+> 82 |           const result = stmt.run(...params);
+     |                              ^
+  83 |           return {
+  84 |             lastInsertRowid: Number(result.lastInsertRowid),
+  85 |             changes: result.changes
+API /api/games: Error details: SQLite3 can only bind numbers, strings, bigints, buffers, and null
+ GET /api/games 500 in 898ms
+API /api/games: Starting request
+✅ Admin user created successfully
+🔄 Running game migrations...
+📦 Applying migration: Add Yams game
+❌ Migration failed: 001_add_yams_game TypeError: SQLite3 can only bind numbers, strings, bigints, buffers, and null
+    at Object.run (src/lib/database-async.ts:82:30)
+    at addGameIfNotExists (src/lib/game-migrations.ts:54:7)
+    at async Object.up (src/lib/game-migrations.ts:134:6)
+    at async runGameMigrations (src/lib/game-migrations.ts:157:8)
+    at async initializeDatabase (src/lib/database-async.ts:253:2)
+    at async GET (src/app/api/games/route.ts:7:4)
+  80 |       return {
+  81 |         run: async (...params: any[]): Promise<DbResult> => {
+> 82 |           const result = stmt.run(...params);
+     |                              ^
+  83 |           return {
+  84 |             lastInsertRowid: Number(result.lastInsertRowid),
+  85 |             changes: result.changes
+API /api/games: Error fetching games: TypeError: SQLite3 can only bind numbers, strings, bigints, buffers, and null
+    at Object.run (src/lib/database-async.ts:82:30)
+    at addGameIfNotExists (src/lib/game-migrations.ts:54:7)
+    at async Object.up (src/lib/game-migrations.ts:134:6)
+    at async runGameMigrations (src/lib/game-migrations.ts:157:8)
+    at async initializeDatabase (src/lib/database-async.ts:253:2)
+    at async GET (src/app/api/games/route.ts:7:4)
+  80 |       return {
+  81 |         run: async (...params: any[]): Promise<DbResult> => {
+> 82 |           const result = stmt.run(...params);
+     |                              ^
+  83 |           return {
+  84 |             lastInsertRowid: Number(result.lastInsertRowid),
+  85 |             changes: result.changes
+API /api/games: Error details: SQLite3 can only bind numbers, strings, bigints, buffers, and null
+ GET /api/games 500 in 248ms
+API /api/games: Starting request
+✅ Admin user created successfully
+🔄 Running game migrations...
+📦 Applying migration: Add Yams game
+✅ Game added: Yams (Yahtzee)
+✅ Migration completed: 001_add_yams_game
+📦 Applying migration: Add Belote game
+✅ Game added: Belote
+✅ Migration completed: 002_add_belote_game
+✅ All game migrations completed
+API /api/games: Database initialized
+API /api/games: Found games: 2
+ GET /api/games 200 in 123ms
+ ○ Compiling /dashboard ...
+ ✓ Compiled /dashboard in 1221ms
+ThemeProvider: Not mounted yet, showing loading state
+ GET /dashboard 200 in 1360ms
+API /api/games: Starting request
+ℹ️ Admin user already exists
+🔄 Running game migrations...
+⏭️ Migration already applied: Add Yams game
+⏭️ Migration already applied: Add Belote game
+✅ All game migrations completed
+API /api/games: Database initialized
+API /api/games: Found games: 2
  GET /api/games 200 in 33ms
- GET /api/players 200 in 30ms
- GET /api/players 200 in 15ms
- GET /api/players 200 in 18ms
- GET /api/players 200 in 15ms
-Create session request: {
-  slug: 'rami',
-  sessionName: 'Partie de Rami',
-  players: [ 'Didi', 'Joe' ],
-  hasScoreTarget: false,
-  scoreTarget: null,
-  finishCurrentRound: false
+API /api/games: Starting request
+ℹ️ Admin user already exists
+🔄 Running game migrations...
+⏭️ Migration already applied: Add Yams game
+⏭️ Migration already applied: Add Belote game
+✅ All game migrations completed
+API /api/games: Database initialized
+API /api/games: Found games: 2
+ GET /api/games 200 in 60ms
+API /api/games: Starting request
+ℹ️ Admin user already exists
+🔄 Running game migrations...
+⏭️ Migration already applied: Add Yams game
+⏭️ Migration already applied: Add Belote game
+✅ All game migrations completed
+API /api/games: Database initialized
+API /api/games: Found games: 2
+ GET /api/games 200 in 27ms
+ℹ️ Admin user already exists
+🔄 Running game migrations...
+⏭️ Migration already applied: Add Yams game
+⏭️ Migration already applied: Add Belote game
+✅ All game migrations completed
+Auth: Checking authentication
+Auth: Token present: true
+Auth: Decoded payload: {
+  userId: 2,
+  email: 'test@example.com',
+  iat: 1753087370,
+  exp: 1753692170
 }
- POST /api/games/rami/sessions 200 in 35ms
- GET /games/rami/2 200 in 115ms
- GET /api/games/all 200 in 624ms
- GET /api/games/all 200 in 69ms
- GET /api/games/rami/sessions/2 200 in 33ms
- GET /api/games/rami/sessions/2 200 in 51ms
- POST /api/games/rami/sessions/2/rounds 200 in 86ms
- GET /api/games/rami/sessions/2 200 in 37ms
+Auth: Authenticated user ID: 2
+ GET /api/sessions 200 in 114ms
+ℹ️ Admin user already exists
+🔄 Running game migrations...
+⏭️ Migration already applied: Add Yams game
+⏭️ Migration already applied: Add Belote game
+✅ All game migrations completed
+Auth: Checking authentication
+Auth: Token present: true
+Auth: Decoded payload: {
+  userId: 2,
+  email: 'test@example.com',
+  iat: 1753087370,
+  exp: 1753692170
+}
+Auth: Authenticated user ID: 2
+ GET /api/sessions 200 in 170ms
+ℹ️ Admin user already exists
+🔄 Running game migrations...
+⏭️ Migration already applied: Add Yams game
+⏭️ Migration already applied: Add Belote game
+✅ All game migrations completed
+Auth: Checking authentication
+Auth: Token present: true
+Auth: Decoded payload: {
+  userId: 2,
+  email: 'test@example.com',
+  iat: 1753087370,
+  exp: 1753692170
+}
+Auth: Authenticated user ID: 2
+ GET /api/sessions 200 in 174ms
+ℹ️ Admin user already exists
+🔄 Running game migrations...
+⏭️ Migration already applied: Add Yams game
+⏭️ Migration already applied: Add Belote game
+✅ All game migrations completed
+ GET /api/auth/me 401 in 150ms
+ℹ️ Admin user already exists
+🔄 Running game migrations...
+⏭️ Migration already applied: Add Yams game
+⏭️ Migration already applied: Add Belote game
+✅ All game migrations completed
+ GET /api/auth/me 401 in 239ms
+ℹ️ Admin user already exists
+🔄 Running game migrations...
+⏭️ Migration already applied: Add Yams game
+⏭️ Migration already applied: Add Belote game
+✅ All game migrations completed
+ GET /api/auth/me 401 in 258ms
+ ✓ Compiled /api/sessions in 265ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 357ms
+ThemeProvider: Not mounted yet, showing loading state
+ GET /dashboard 200 in 57ms
+ℹ️ Admin user already exists
+🔄 Running game migrations...
+⏭️ Migration already applied: Add Yams game
+⏭️ Migration already applied: Add Belote game
+✅ All game migrations completed
+Auth: Checking authentication
+Auth: Token present: true
+Auth: Decoded payload: {
+  userId: 2,
+  email: 'test@example.com',
+  iat: 1753087370,
+  exp: 1753692170
+}
+Auth: Authenticated user ID: 2
+ GET /api/sessions 200 in 47ms
+ℹ️ Admin user already exists
+🔄 Running game migrations...
+⏭️ Migration already applied: Add Yams game
+⏭️ Migration already applied: Add Belote game
+✅ All game migrations completed
+ GET /api/auth/me 401 in 37ms
+ℹ️ Admin user already exists
+🔄 Running game migrations...
+⏭️ Migration already applied: Add Yams game
+⏭️ Migration already applied: Add Belote game
+✅ All game migrations completed
+ GET /api/auth/me 401 in 55ms
+ℹ️ Admin user already exists
+🔄 Running game migrations...
+⏭️ Migration already applied: Add Yams game
+⏭️ Migration already applied: Add Belote game
+✅ All game migrations completed
+Auth: Checking authentication
+Auth: Token present: true
+Auth: Decoded payload: {
+  userId: 2,
+  email: 'test@example.com',
+  iat: 1753087370,
+  exp: 1753692170
+}
+Auth: Authenticated user ID: 2
+ GET /api/sessions 200 in 58ms
+API /api/games: Starting request
+ℹ️ Admin user already exists
+🔄 Running game migrations...
+⏭️ Migration already applied: Add Yams game
+⏭️ Migration already applied: Add Belote game
+✅ All game migrations completed
+API /api/games: Database initialized
+API /api/games: Found games: 2
+ GET /api/games 200 in 65ms
+API /api/games: Starting request
+ℹ️ Admin user already exists
+🔄 Running game migrations...
+⏭️ Migration already applied: Add Yams game
+⏭️ Migration already applied: Add Belote game
+✅ All game migrations completed
+API /api/games: Database initialized
+API /api/games: Found games: 2
+ GET /api/games 200 in 56ms
+ℹ️ Admin user already exists
+🔄 Running game migrations...
+⏭️ Migration already applied: Add Yams game
+⏭️ Migration already applied: Add Belote game
+✅ All game migrations completed
+Auth: Checking authentication
+Auth: Token present: true
+Auth: Decoded payload: {
+  userId: 2,
+  email: 'test@example.com',
+  iat: 1753087370,
+  exp: 1753692170
+}
+Auth: Authenticated user ID: 2
+ GET /api/sessions 200 in 38ms
+ℹ️ Admin user already exists
+🔄 Running game migrations...
+⏭️ Migration already applied: Add Yams game
+⏭️ Migration already applied: Add Belote game
+✅ All game migrations completed
+ GET /api/auth/me 401 in 38ms
+API /api/games: Starting request
+ℹ️ Admin user already exists
+🔄 Running game migrations...
+⏭️ Migration already applied: Add Yams game
+⏭️ Migration already applied: Add Belote game
+✅ All game migrations completed
+API /api/games: Database initialized
+API /api/games: Found games: 2
+ GET /api/games 200 in 45ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 246ms
+ThemeProvider: Not mounted yet, showing loading state
+ GET /dashboard 200 in 69ms
+ℹ️ Admin user already exists
+🔄 Running game migrations...
+⏭️ Migration already applied: Add Yams game
+⏭️ Migration already applied: Add Belote game
+✅ All game migrations completed
+ GET /api/auth/me 401 in 38ms
+ℹ️ Admin user already exists
+🔄 Running game migrations...
+⏭️ Migration already applied: Add Yams game
+⏭️ Migration already applied: Add Belote game
+✅ All game migrations completed
+Auth: Checking authentication
+Auth: Token present: true
+Auth: Decoded payload: {
+  userId: 2,
+  email: 'test@example.com',
+  iat: 1753087370,
+  exp: 1753692170
+}
+Auth: Authenticated user ID: 2
+ GET /api/sessions 200 in 48ms
+ℹ️ Admin user already exists
+🔄 Running game migrations...
+⏭️ Migration already applied: Add Yams game
+⏭️ Migration already applied: Add Belote game
+✅ All game migrations completed
+Auth: Checking authentication
+Auth: Token present: true
+Auth: Decoded payload: {
+  userId: 2,
+  email: 'test@example.com',
+  iat: 1753087370,
+  exp: 1753692170
+}
+Auth: Authenticated user ID: 2
+ GET /api/sessions 200 in 53ms
+API /api/games: Starting request
+ℹ️ Admin user already exists
+🔄 Running game migrations...
+⏭️ Migration already applied: Add Yams game
+⏭️ Migration already applied: Add Belote game
+✅ All game migrations completed
+API /api/games: Database initialized
+API /api/games: Found games: 2
+ GET /api/games 200 in 62ms
+ℹ️ Admin user already exists
+🔄 Running game migrations...
+⏭️ Migration already applied: Add Yams game
+⏭️ Migration already applied: Add Belote game
+✅ All game migrations completed
+ GET /api/auth/me 401 in 58ms
+API /api/games: Starting request
+ℹ️ Admin user already exists
+🔄 Running game migrations...
+⏭️ Migration already applied: Add Yams game
+⏭️ Migration already applied: Add Belote game
+✅ All game migrations completed
+API /api/games: Database initialized
+API /api/games: Found games: 2
+ GET /api/games 200 in 68ms
+ℹ️ Admin user already exists
+🔄 Running game migrations...
+⏭️ Migration already applied: Add Yams game
+⏭️ Migration already applied: Add Belote game
+✅ All game migrations completed
+Auth: Checking authentication
+Auth: Token present: true
+Auth: Decoded payload: {
+  userId: 2,
+  email: 'test@example.com',
+  iat: 1753087370,
+  exp: 1753692170
+}
+Auth: Authenticated user ID: 2
+ GET /api/sessions 200 in 60ms
+ℹ️ Admin user already exists
+🔄 Running game migrations...
+⏭️ Migration already applied: Add Yams game
+⏭️ Migration already applied: Add Belote game
+✅ All game migrations completed
+ GET /api/auth/me 401 in 24ms
+API /api/games: Starting request
+ℹ️ Admin user already exists
+🔄 Running game migrations...
+⏭️ Migration already applied: Add Yams game
+⏭️ Migration already applied: Add Belote game
+✅ All game migrations completed
+API /api/games: Database initialized
+API /api/games: Found games: 2
+ GET /api/games 200 in 27ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 236ms
+ ✓ Compiled in 206ms
+ ⨯ ./src/components/ThemeToggle.tsx:4:1
+Module not found: Can't resolve './ThemeProvider'
+[0m [90m 2 |[39m
+ [90m 3 |[39m [36mimport[39m { [33mMoon[39m[33m,[39m [33mSun[39m } [36mfrom[39m [32m'lucide-react'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 4 |[39m [36mimport[39m { useTheme } [36mfrom[39m [32m'./ThemeProvider'[39m[33m;[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 5 |[39m
+ [90m 6 |[39m [36mexport[39m [36mdefault[39m [36mfunction[39m [33mThemeToggle[39m() {
+ [90m 7 |[39m   [36mtry[39m {[0m
+
+
+
+Import traces:
+  Client Component Browser:
+    ./src/components/ThemeToggle.tsx [Client Component Browser]
+    ./src/components/Sidebar.tsx [Client Component Browser]
+    ./src/app/dashboard/page.tsx [Client Component Browser]
+    ./src/app/dashboard/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/components/ThemeToggle.tsx [Client Component SSR]
+    ./src/components/Sidebar.tsx [Client Component SSR]
+    ./src/app/dashboard/page.tsx [Client Component SSR]
+    ./src/app/dashboard/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+ ⨯ ./src/components/ThemeToggle.tsx:4:1
+Module not found: Can't resolve './ThemeProvider'
+[0m [90m 2 |[39m
+ [90m 3 |[39m [36mimport[39m { [33mMoon[39m[33m,[39m [33mSun[39m } [36mfrom[39m [32m'lucide-react'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 4 |[39m [36mimport[39m { useTheme } [36mfrom[39m [32m'./ThemeProvider'[39m[33m;[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 5 |[39m
+ [90m 6 |[39m [36mexport[39m [36mdefault[39m [36mfunction[39m [33mThemeToggle[39m() {
+ [90m 7 |[39m   [36mtry[39m {[0m
+
+
+
+Import traces:
+  Client Component Browser:
+    ./src/components/ThemeToggle.tsx [Client Component Browser]
+    ./src/components/Sidebar.tsx [Client Component Browser]
+    ./src/app/dashboard/page.tsx [Client Component Browser]
+    ./src/app/dashboard/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/components/ThemeToggle.tsx [Client Component SSR]
+    ./src/components/Sidebar.tsx [Client Component SSR]
+    ./src/app/dashboard/page.tsx [Client Component SSR]
+    ./src/app/dashboard/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+ ⨯ ./src/components/ThemeToggle.tsx:4:1
+Module not found: Can't resolve './ThemeProvider'
+[0m [90m 2 |[39m
+ [90m 3 |[39m [36mimport[39m { [33mMoon[39m[33m,[39m [33mSun[39m } [36mfrom[39m [32m'lucide-react'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 4 |[39m [36mimport[39m { useTheme } [36mfrom[39m [32m'./ThemeProvider'[39m[33m;[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 5 |[39m
+ [90m 6 |[39m [36mexport[39m [36mdefault[39m [36mfunction[39m [33mThemeToggle[39m() {
+ [90m 7 |[39m   [36mtry[39m {[0m
+
+
+
+Import traces:
+  Client Component Browser:
+    ./src/components/ThemeToggle.tsx [Client Component Browser]
+    ./src/components/Sidebar.tsx [Client Component Browser]
+    ./src/app/dashboard/page.tsx [Client Component Browser]
+    ./src/app/dashboard/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/components/ThemeToggle.tsx [Client Component SSR]
+    ./src/components/Sidebar.tsx [Client Component SSR]
+    ./src/app/dashboard/page.tsx [Client Component SSR]
+    ./src/app/dashboard/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+ ⨯ ./src/components/ThemeToggle.tsx:4:1
+Module not found: Can't resolve './ThemeProvider'
+[0m [90m 2 |[39m
+ [90m 3 |[39m [36mimport[39m { [33mMoon[39m[33m,[39m [33mSun[39m } [36mfrom[39m [32m'lucide-react'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 4 |[39m [36mimport[39m { useTheme } [36mfrom[39m [32m'./ThemeProvider'[39m[33m;[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 5 |[39m
+ [90m 6 |[39m [36mexport[39m [36mdefault[39m [36mfunction[39m [33mThemeToggle[39m() {
+ [90m 7 |[39m   [36mtry[39m {[0m
+
+
+
+Import traces:
+  Client Component Browser:
+    ./src/components/ThemeToggle.tsx [Client Component Browser]
+    ./src/components/Sidebar.tsx [Client Component Browser]
+    ./src/app/dashboard/page.tsx [Client Component Browser]
+    ./src/app/dashboard/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/components/ThemeToggle.tsx [Client Component SSR]
+    ./src/components/Sidebar.tsx [Client Component SSR]
+    ./src/app/dashboard/page.tsx [Client Component SSR]
+    ./src/app/dashboard/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+ ✓ Compiled in 195ms
+ ✓ Compiled in 171ms
 [?25h

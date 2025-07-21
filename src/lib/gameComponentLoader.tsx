@@ -19,9 +19,12 @@ const GenericScoreSheet = dynamic(() => import('@/components/scoresheets/Generic
   loading: LoadingComponent
 });
 
-// Composants spécifiques pour les jeux complexes (seul Yams nécessite un composant spécifique)
+// Composants spécifiques pour les jeux complexes
 const specificComponents: Record<string, ComponentType<ScoreSheetProps>> = {
   'yams': dynamic(() => import('@/components/scoresheets/YamsScoreSheet'), {
+    loading: LoadingComponent
+  }),
+  'belote': dynamic(() => import('@/components/scoresheets/BeloteScoreSheet'), {
     loading: LoadingComponent
   }),
 };

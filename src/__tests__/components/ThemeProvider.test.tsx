@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import { act } from 'react';
-import { ThemeProvider, useTheme } from '../../components/ThemeProvider';
+import { ThemeProvider, useTheme } from '@/contexts/ThemeContext';
 
 // Test component to use the theme context
 function TestComponent() {

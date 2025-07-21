@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/database-async';
+import { db } from '@/lib/database';
 import { getAuthenticatedUserId, unauthorizedResponse } from '@/lib/auth';
 
 export async function POST(
@@ -45,7 +45,7 @@ export async function POST(
 
     // Use Promise.all for parallel execution (if database supports it)
     await Promise.all(
-      scores.map((score: any) => 
+      scores.map((score: { playerId: number; score: number }) => 
         insertScore.run(sessionId, score.playerId, roundNumber, score.score)
       )
     );

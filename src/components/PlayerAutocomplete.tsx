@@ -104,7 +104,7 @@ export default function PlayerAutocomplete({
                 key={player.player_name}
                 type="button"
                 onClick={() => handleSelect(player.player_name)}
-                className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 flex justify-between items-center"
+                className="w-full text-left px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-700 flex justify-between items-center"
               >
                 <span>{player.player_name}</span>
                 <span className="text-xs text-gray-500 dark:text-gray-400">

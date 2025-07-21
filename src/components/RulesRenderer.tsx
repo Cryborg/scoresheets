@@ -13,7 +13,7 @@ interface RulesRendererProps {
 function parseMarkdownToHTML(text: string): string {
   if (!text) return '';
   
-  let html = text
+  const html = text
     // Headers (## -> h3, ### -> h4)
     .replace(/^### (.*$)/gm, '<h4 class="text-md font-semibold text-gray-900 dark:text-white mt-4 mb-2 flex items-center gap-2">$1</h4>')
     .replace(/^## (.*$)/gm, '<h3 class="text-lg font-semibold text-gray-900 dark:text-white mt-6 mb-3 flex items-center gap-2">$1</h3>')
@@ -25,7 +25,7 @@ function parseMarkdownToHTML(text: string): string {
   const lines = html.split('\n');
   const processedLines: string[] = [];
   let inList = false;
-  let listLevel = 0;
+  // const listLevel = 0; // Reserved for future nested list support
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
@@ -36,13 +36,13 @@ function parseMarkdownToHTML(text: string): string {
     const numberedListMatch = line.match(/^(\s*)\d+\.\s(.+)$/);
     
     if (listMatch || numberedListMatch) {
-      const indent = (listMatch || numberedListMatch)![1].length;
+      // const indent = (listMatch || numberedListMatch)![1].length; // Reserved for nested lists
       const content = (listMatch || numberedListMatch)![2];
       
       if (!inList) {
         processedLines.push('<ul class="list-disc list-inside space-y-1 ml-4 mb-3">');
         inList = true;
-        listLevel = indent;
+        // listLevel = indent; // Reserved for future nested list support
       }
       
       processedLines.push(`<li class="text-gray-700 dark:text-gray-300">${content}</li>`);

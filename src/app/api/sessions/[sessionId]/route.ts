@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db, initializeDatabase } from '@/lib/database-async';
+import { db, initializeDatabase } from '@/lib/database';
 
 function getUserIdFromRequest(request: NextRequest): number | null {
   const token = request.cookies.get('auth-token')?.value;

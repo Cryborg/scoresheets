@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
-import { X, ChevronRight, ChevronDown, Gamepad2, Home, LogOut } from 'lucide-react';
+import { X, ChevronRight, ChevronDown, Gamepad2, Home, LogOut, Settings } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
 
 interface Game {
@@ -19,9 +19,10 @@ interface SidebarProps {
   onClose: () => void;
   games: Game[];
   onLogout: () => void;
+  isAdmin?: boolean;
 }
 
-export default function Sidebar({ isOpen, onClose, games, onLogout }: SidebarProps) {
+export default function Sidebar({ isOpen, onClose, games, onLogout, isAdmin }: SidebarProps) {
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
 
   // Group games by category
@@ -73,9 +74,9 @@ export default function Sidebar({ isOpen, onClose, games, onLogout }: SidebarPro
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Menu</h2>
             <button
               onClick={onClose}
-              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+              className="p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
             >
-              <X className="h-5 w-5 text-gray-500 dark:text-gray-400" />
+              <X className="h-5 w-5 text-gray-700 dark:text-gray-400" />
             </button>
           </div>
 
@@ -84,7 +85,7 @@ export default function Sidebar({ isOpen, onClose, games, onLogout }: SidebarPro
             <Link
               href="/dashboard"
               onClick={onClose}
-              className="flex items-center px-4 py-2 mb-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+              className="flex items-center px-4 py-2 mb-2 text-gray-900 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg"
             >
               <Home className="h-5 w-5 mr-3" />
               Accueil
@@ -100,7 +101,7 @@ export default function Sidebar({ isOpen, onClose, games, onLogout }: SidebarPro
                   <div key={category}>
                     <button
                       onClick={() => toggleCategory(category)}
-                      className="flex items-center justify-between w-full px-4 py-2 text-left text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+                      className="flex items-center justify-between w-full px-4 py-2 text-left text-gray-900 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg"
                     >
                       <span className="font-medium">{category}</span>
                       {expandedCategories.has(category) ? (
@@ -119,7 +120,7 @@ export default function Sidebar({ isOpen, onClose, games, onLogout }: SidebarPro
                             onClick={onClose}
                             className={`flex items-center px-4 py-2 text-sm rounded-lg ${
                               game.is_implemented
-                                ? 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                                ? 'text-gray-900 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
                                 : 'text-gray-400 dark:text-gray-500 cursor-not-allowed'
                             }`}
                           >
@@ -147,9 +148,20 @@ export default function Sidebar({ isOpen, onClose, games, onLogout }: SidebarPro
               <ThemeToggle />
             </div>
             
+            {isAdmin && (
+              <Link
+                href="/admin"
+                onClick={onClose}
+                className="flex items-center w-full px-4 py-2 text-gray-900 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg"
+              >
+                <Settings className="h-5 w-5 mr-3" />
+                Administration
+              </Link>
+            )}
+            
             <button
               onClick={onLogout}
-              className="flex items-center w-full px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+              className="flex items-center w-full px-4 py-2 text-gray-900 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg"
             >
               <LogOut className="h-5 w-5 mr-3" />
               Déconnexion

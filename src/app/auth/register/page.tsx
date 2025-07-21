@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useTheme } from '@/components/ThemeProvider';
+import { useTheme } from '@/contexts/ThemeContext';
 
 export default function RegisterPage() {
   const [username, setUsername] = useState('');

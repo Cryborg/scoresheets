@@ -1,15 +1,15 @@
 import { NextResponse } from 'next/server';
-import { db, initializeDatabase } from '@/lib/database-async';
+import { db, initializeDatabase } from '@/lib/database';
 
 export async function GET() {
   try {
     await initializeDatabase();
     
-    const categories = await db.prepare(`
+    const categories = await db.execute(`
       SELECT id, name
       FROM game_categories
       ORDER BY name
-    `).all();
+    `);
 
     return NextResponse.json({ categories });
   } catch (error) {

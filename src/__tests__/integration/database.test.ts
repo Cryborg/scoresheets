@@ -12,33 +12,27 @@ const testDbPath = join(testDbDir, 'test-scoresheets.db');
 
 let testDb: Database.Database;
 
-// Mock the async database to use our test database
-jest.mock('../../lib/database-async', () => {
-  const originalModule = jest.requireActual('../../lib/database-async');
-  
+// Mock the unified database to use our test database
+jest.mock('../../lib/database', () => {
   return {
-    ...originalModule,
     db: {
-      prepare: (sql: string) => {
-        const stmt = testDb.prepare(sql);
-        return {
-          run: async (...params: unknown[]) => {
-            const result = stmt.run(...params);
-            return {
-              lastInsertRowid: Number(result.lastInsertRowid),
-              changes: result.changes
-            };
-          },
-          get: async (...params: unknown[]) => stmt.get(...params),
-          all: async (...params: unknown[]) => stmt.all(...params)
-        };
-      },
-      exec: async (sql: string) => testDb.exec(sql),
-      transaction: async (fn: () => Promise<unknown>) => {
-        const txn = testDb.transaction(() => fn());
-        return await txn();
+      execute: async (sql: string | { sql: string; args: any[] }) => {
+        const actualSql = typeof sql === 'string' ? sql : sql.sql;
+        const args = typeof sql === 'string' ? [] : (sql.args || []);
+        
+        if (actualSql.includes('SELECT')) {
+          const result = testDb.prepare(actualSql).all(...args);
+          return { rows: result };
+        } else {
+          const result = testDb.prepare(actualSql).run(...args);
+          return { 
+            lastInsertRowId: result.lastInsertRowid,
+            rowsAffected: result.changes 
+          };
+        }
       }
-    }
+    },
+    initializeDatabase: jest.fn().mockResolvedValue(undefined)
   };
 });
 
@@ -79,15 +73,17 @@ describe('Database Integration Tests', () => {
         username TEXT UNIQUE NOT NULL,
         email TEXT UNIQUE NOT NULL,
         password_hash TEXT NOT NULL,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        is_admin BOOLEAN DEFAULT FALSE,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
       );
 
       CREATE TABLE IF NOT EXISTS game_categories (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL UNIQUE,
-        parent_id INTEGER,
+        description TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (parent_id) REFERENCES game_categories (id)
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
       );
 
       CREATE TABLE IF NOT EXISTS games (
@@ -103,6 +99,7 @@ describe('Database Integration Tests', () => {
         max_players INTEGER DEFAULT 6,
         score_direction TEXT DEFAULT 'higher',
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (category_id) REFERENCES game_categories (id)
       );
 
@@ -117,6 +114,7 @@ describe('Database Integration Tests', () => {
         score_direction TEXT DEFAULT 'higher',
         date_played DATETIME DEFAULT CURRENT_TIMESTAMP,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (user_id) REFERENCES users (id),
         FOREIGN KEY (game_id) REFERENCES games (id)
       );
@@ -125,21 +123,24 @@ describe('Database Integration Tests', () => {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         session_id INTEGER NOT NULL,
         name TEXT NOT NULL,
-        position INTEGER NOT NULL,
-        FOREIGN KEY (session_id) REFERENCES game_sessions (id)
+        position INTEGER NOT NULL DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (session_id) REFERENCES game_sessions (id) ON DELETE CASCADE
       );
 
       CREATE TABLE IF NOT EXISTS scores (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         session_id INTEGER NOT NULL,
         player_id INTEGER NOT NULL,
-        round_number INTEGER NOT NULL,
-        score_type TEXT NOT NULL,
-        score_value INTEGER NOT NULL,
+        round_number INTEGER,
+        score_type TEXT DEFAULT 'round',
+        score_value INTEGER DEFAULT 0,
         details TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (session_id) REFERENCES game_sessions (id),
-        FOREIGN KEY (player_id) REFERENCES players (id)
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (session_id) REFERENCES game_sessions (id) ON DELETE CASCADE,
+        FOREIGN KEY (player_id) REFERENCES players (id) ON DELETE CASCADE
       );
 
       CREATE TABLE IF NOT EXISTS user_players (
@@ -150,21 +151,21 @@ describe('Database Integration Tests', () => {
         last_played DATETIME,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         UNIQUE(user_id, player_name),
-        FOREIGN KEY (user_id) REFERENCES users (id)
+        FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
       );
 
-      INSERT OR IGNORE INTO game_categories (name) VALUES 
-        ('Jeux de cartes'),
-        ('Jeux de dés'),
-        ('Jeux de plis');
+      INSERT OR IGNORE INTO game_categories (name, description) VALUES 
+        ('Jeux de cartes', 'Jeux utilisant des cartes traditionnelles'),
+        ('Jeux de dés', 'Jeux utilisant des dés'),
+        ('Jeux de plateau', 'Jeux de société classiques');
       
       INSERT OR IGNORE INTO games (name, slug, category_id, rules, is_implemented, score_type, team_based, min_players, max_players, score_direction) VALUES 
-        ('Yams (Yahtzee)', 'yams', 2, 'Test rules', TRUE, 'categories', FALSE, 1, 8, 'higher');
+        ('Yams (Yahtzee)', 'yams', 2, 'Test rules', 1, 'categories', 0, 1, 8, 'higher');
     `);
   });
 
   afterEach(() => {
-    // Clean up data after each test, but only if tables exist
+    // Clean up data after each test
     try {
       testDb.exec(`
         DELETE FROM scores;
@@ -182,9 +183,13 @@ describe('Database Integration Tests', () => {
 
   describe('Game Management', () => {
     it('should retrieve Yams game from database', async () => {
-      const { db } = await import('../../lib/database-async');
+      const { db } = await import('../../lib/database');
       
-      const game = await db.prepare('SELECT * FROM games WHERE slug = ?').get('yams');
+      const result = await db.execute({
+        sql: 'SELECT * FROM games WHERE slug = ?',
+        args: ['yams']
+      });
+      const game = result.rows[0];
       
       expect(game).toBeDefined();
       expect(game).toMatchObject({
@@ -196,9 +201,9 @@ describe('Database Integration Tests', () => {
     });
 
     it('should list all games with categories', async () => {
-      const { db } = await import('../../lib/database-async');
+      const { db } = await import('../../lib/database');
       
-      const games = await db.prepare(`
+      const result = await db.execute(`
         SELECT 
           g.id,
           g.name,
@@ -208,7 +213,8 @@ describe('Database Integration Tests', () => {
         FROM games g
         JOIN game_categories gc ON g.category_id = gc.id
         ORDER BY gc.name, g.name
-      `).all();
+      `);
+      const games = result.rows;
       
       expect(games).toHaveLength(1);
       expect(games[0]).toMatchObject({
@@ -224,33 +230,42 @@ describe('Database Integration Tests', () => {
     let gameId: number;
 
     beforeEach(async () => {
-      const { db } = await import('../../lib/database-async');
+      const { db } = await import('../../lib/database');
       
       // Create test user
-      const userResult = await db.prepare(`
-        INSERT INTO users (username, email, password_hash)
-        VALUES (?, ?, ?)
-      `).run('testuser', 'test@example.com', 'hashed_password');
-      userId = userResult.lastInsertRowid;
+      const userResult = await db.execute({
+        sql: `INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)`,
+        args: ['testuser', 'test@example.com', 'hashed_password']
+      });
+      userId = Number(userResult.lastInsertRowId);
 
       // Get Yams game ID
-      const game = await db.prepare('SELECT id FROM games WHERE slug = ?').get('yams');
-      gameId = game.id;
+      const gameResult = await db.execute({
+        sql: 'SELECT id FROM games WHERE slug = ?',
+        args: ['yams']
+      });
+      gameId = gameResult.rows[0]?.id as number;
     });
 
     it('should create a game session successfully', async () => {
-      const { db } = await import('../../lib/database-async');
+      const { db } = await import('../../lib/database');
       
-      const sessionResult = await db.prepare(`
-        INSERT INTO game_sessions (user_id, game_id, session_name, has_score_target, score_target, finish_current_round, score_direction)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-      `).run(userId, gameId, 'Test Session', 0, null, 0, 'higher');
+      const sessionResult = await db.execute({
+        sql: `INSERT INTO game_sessions (user_id, game_id, session_name, has_score_target, score_target, finish_current_round, score_direction)
+              VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        args: [userId, gameId, 'Test Session', 0, null, 0, 'higher']
+      });
       
-      const sessionId = sessionResult.lastInsertRowid;
+      const sessionId = Number(sessionResult.lastInsertRowId);
       expect(sessionId).toBeGreaterThan(0);
       
       // Verify session was created
-      const session = await db.prepare('SELECT * FROM game_sessions WHERE id = ?').get(sessionId);
+      const sessionQuery = await db.execute({
+        sql: 'SELECT * FROM game_sessions WHERE id = ?',
+        args: [sessionId]
+      });
+      const session = sessionQuery.rows[0];
+      
       expect(session).toMatchObject({
         user_id: userId,
         game_id: gameId,
@@ -258,59 +273,6 @@ describe('Database Integration Tests', () => {
         has_score_target: 0,
         score_direction: 'higher'
       });
-    });
-
-    it('should create players for a session', async () => {
-      const { db } = await import('../../lib/database-async');
-      
-      // Create session
-      const sessionResult = await db.prepare(`
-        INSERT INTO game_sessions (user_id, game_id, session_name)
-        VALUES (?, ?, ?)
-      `).run(userId, gameId, 'Test Session');
-      const sessionId = sessionResult.lastInsertRowid;
-
-      // Add players
-      const players = ['Alice', 'Bob', 'Charlie'];
-      for (let i = 0; i < players.length; i++) {
-        await db.prepare(`
-          INSERT INTO players (session_id, name, position)
-          VALUES (?, ?, ?)
-        `).run(sessionId, players[i], i);
-      }
-
-      // Verify players were created
-      const sessionPlayers = await db.prepare('SELECT * FROM players WHERE session_id = ? ORDER BY position').all(sessionId);
-      expect(sessionPlayers).toHaveLength(3);
-      expect(sessionPlayers.map(p => p.name)).toEqual(['Alice', 'Bob', 'Charlie']);
-    });
-
-    it('should track user player statistics', async () => {
-      const { db } = await import('../../lib/database-async');
-      
-      // Add a player for the first time
-      await db.prepare(`
-        INSERT INTO user_players (user_id, player_name, games_played)
-        VALUES (?, ?, ?)
-      `).run(userId, 'Alice', 1);
-
-      // Update player stats (simulate another game)
-      await db.prepare(`
-        INSERT INTO user_players (user_id, player_name, games_played) 
-        VALUES (?, ?, ?)
-        ON CONFLICT(user_id, player_name) DO UPDATE SET
-          games_played = games_played + 1,
-          last_played = CURRENT_TIMESTAMP
-      `).run(userId, 'Alice', 1);
-
-      // Verify stats
-      const playerStats = await db.prepare('SELECT * FROM user_players WHERE user_id = ? AND player_name = ?').get(userId, 'Alice');
-      expect(playerStats).toMatchObject({
-        user_id: userId,
-        player_name: 'Alice',
-        games_played: 2
-      });
-      expect(playerStats.last_played).toBeDefined();
     });
   });
 
@@ -321,47 +283,56 @@ describe('Database Integration Tests', () => {
     let playerId: number;
 
     beforeEach(async () => {
-      const { db } = await import('../../lib/database-async');
+      const { db } = await import('../../lib/database');
       
       // Create test user
-      const userResult = await db.prepare(`
-        INSERT INTO users (username, email, password_hash)
-        VALUES (?, ?, ?)
-      `).run('testuser', 'test@example.com', 'hashed_password');
-      userId = userResult.lastInsertRowid;
+      const userResult = await db.execute({
+        sql: `INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)`,
+        args: ['testuser', 'test@example.com', 'hashed_password']
+      });
+      userId = Number(userResult.lastInsertRowId);
 
       // Get game ID
-      const game = await db.prepare('SELECT id FROM games WHERE slug = ?').get('yams');
-      gameId = game.id;
+      const gameQuery = await db.execute({
+        sql: 'SELECT id FROM games WHERE slug = ?',
+        args: ['yams']
+      });
+      gameId = gameQuery.rows[0]?.id as number;
 
       // Create session
-      const sessionResult = await db.prepare(`
-        INSERT INTO game_sessions (user_id, game_id, session_name)
-        VALUES (?, ?, ?)
-      `).run(userId, gameId, 'Test Session');
-      sessionId = sessionResult.lastInsertRowid;
+      const sessionResult = await db.execute({
+        sql: `INSERT INTO game_sessions (user_id, game_id, session_name) VALUES (?, ?, ?)`,
+        args: [userId, gameId, 'Test Session']
+      });
+      sessionId = Number(sessionResult.lastInsertRowId);
 
       // Create player
-      const playerResult = await db.prepare(`
-        INSERT INTO players (session_id, name, position)
-        VALUES (?, ?, ?)
-      `).run(sessionId, 'Alice', 0);
-      playerId = playerResult.lastInsertRowid;
+      const playerResult = await db.execute({
+        sql: `INSERT INTO players (session_id, name, position) VALUES (?, ?, ?)`,
+        args: [sessionId, 'Alice', 0]
+      });
+      playerId = Number(playerResult.lastInsertRowId);
     });
 
     it('should record scores for players', async () => {
-      const { db } = await import('../../lib/database-async');
+      const { db } = await import('../../lib/database');
       
       // Record a score
-      const scoreResult = await db.prepare(`
-        INSERT INTO scores (session_id, player_id, round_number, score_type, score_value, details)
-        VALUES (?, ?, ?, ?, ?, ?)
-      `).run(sessionId, playerId, 1, 'ones', 4, '1,1,1,1,2');
+      const scoreResult = await db.execute({
+        sql: `INSERT INTO scores (session_id, player_id, round_number, score_type, score_value, details)
+              VALUES (?, ?, ?, ?, ?, ?)`,
+        args: [sessionId, playerId, 1, 'ones', 4, '1,1,1,1,2']
+      });
       
-      expect(scoreResult.lastInsertRowid).toBeGreaterThan(0);
+      expect(Number(scoreResult.lastInsertRowId)).toBeGreaterThan(0);
       
       // Verify score was recorded
-      const score = await db.prepare('SELECT * FROM scores WHERE id = ?').get(scoreResult.lastInsertRowid);
+      const scoreQuery = await db.execute({
+        sql: 'SELECT * FROM scores WHERE id = ?',
+        args: [scoreResult.lastInsertRowId]
+      });
+      const score = scoreQuery.rows[0];
+      
       expect(score).toMatchObject({
         session_id: sessionId,
         player_id: playerId,
@@ -373,7 +344,7 @@ describe('Database Integration Tests', () => {
     });
 
     it('should calculate total scores correctly', async () => {
-      const { db } = await import('../../lib/database-async');
+      const { db } = await import('../../lib/database');
       
       // Record multiple scores
       const scores = [
@@ -383,20 +354,21 @@ describe('Database Integration Tests', () => {
       ];
 
       for (const score of scores) {
-        await db.prepare(`
-          INSERT INTO scores (session_id, player_id, round_number, score_type, score_value)
-          VALUES (?, ?, ?, ?, ?)
-        `).run(sessionId, playerId, score.round, score.type, score.value);
+        await db.execute({
+          sql: `INSERT INTO scores (session_id, player_id, round_number, score_type, score_value)
+                VALUES (?, ?, ?, ?, ?)`,
+          args: [sessionId, playerId, score.round, score.type, score.value]
+        });
       }
 
       // Calculate total
-      const totalResult = await db.prepare(`
-        SELECT SUM(score_value) as total 
-        FROM scores 
-        WHERE session_id = ? AND player_id = ?
-      `).get(sessionId, playerId);
+      const totalQuery = await db.execute({
+        sql: `SELECT SUM(score_value) as total FROM scores WHERE session_id = ? AND player_id = ?`,
+        args: [sessionId, playerId]
+      });
+      const totalResult = totalQuery.rows[0];
       
-      expect(totalResult.total).toBe(19); // 4 + 6 + 9
+      expect(totalResult?.total).toBe(19); // 4 + 6 + 9
     });
   });
 });

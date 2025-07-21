@@ -2,9 +2,11 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { ArrowLeft, Save, Trophy } from 'lucide-react';
+import { Save, Trophy } from 'lucide-react';
 import { authenticatedFetch } from '@/lib/authClient';
+import GameLayout from '@/components/layout/GameLayout';
+import GameCard from '@/components/layout/GameCard';
+import RankingSidebar from '@/components/layout/RankingSidebar';
 
 interface Player {
   id: number;
@@ -206,31 +208,18 @@ export default function GenericSessionPage({ params }: GenericSessionPageProps) 
   const waitingForRoundEnd = someoneReachedTarget && session.finish_current_round && !isCurrentGameFinished;
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <nav className="bg-white dark:bg-gray-800 shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <Link href="/dashboard" className="flex items-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 mr-4">
-                <ArrowLeft className="h-5 w-5" />
-              </Link>
-              <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
-                {session.session_name}
-              </h1>
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      <main className="max-w-6xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          <div className="lg:col-span-3">
+    <GameLayout 
+      sessionName={session.session_name}
+      sidebar={
+        <RankingSidebar
+          players={ranking}
+          scoreTarget={session.score_target}
+          hasScoreTarget={session.has_score_target}
+        />
+      }
+    >
             {!isCurrentGameFinished && (
-              <div className="bg-white dark:bg-gray-800 shadow rounded-lg mb-6">
-                <div className="px-4 py-5 sm:p-6">
-                  <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-white mb-4">
-                    Tour {nextRoundNumber}
-                  </h3>
+              <GameCard title={`Tour ${nextRoundNumber}`}>
                   
                   {waitingForRoundEnd && (
                     <div className="mb-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-md">
@@ -268,16 +257,11 @@ export default function GenericSessionPage({ params }: GenericSessionPageProps) 
                       {saving ? 'Sauvegarde...' : 'Enregistrer les scores'}
                     </button>
                   </div>
-                </div>
-              </div>
+              </GameCard>
             )}
 
             {session.rounds.length > 0 && (
-              <div className="bg-white dark:bg-gray-800 shadow rounded-lg">
-                <div className="px-4 py-5 sm:p-6">
-                  <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-white mb-4">
-                    Historique des scores
-                  </h3>
+              <GameCard title="Historique des scores">
                   
                   <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
@@ -336,56 +320,8 @@ export default function GenericSessionPage({ params }: GenericSessionPageProps) 
                       </p>
                     </div>
                   )}
-                </div>
-              </div>
+              </GameCard>
             )}
-          </div>
-
-          <div>
-            <div className="bg-white dark:bg-gray-800 shadow rounded-lg">
-              <div className="px-4 py-5 sm:p-6">
-                <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-white mb-4">
-                  Classement
-                </h3>
-                
-                {session.has_score_target && session.score_target && session.score_target > 0 ? (
-                  <div className="mb-4 text-sm text-gray-600 dark:text-gray-400">
-                    Score à atteindre : <span className="font-semibold">{session.score_target} points</span>
-                  </div>
-                ) : null}
-                
-                <div className="space-y-3">
-                  {ranking.map((player, index) => (
-                    <div key={player.id} className="flex items-center justify-between">
-                      <div className="flex items-center">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold mr-3 ${
-                          index === 0 ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
-                          index === 1 ? 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200' :
-                          index === 2 ? 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200' :
-                          'bg-gray-50 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
-                        }`}>
-                          {index + 1}
-                        </div>
-                        <span className="text-sm font-medium text-gray-900 dark:text-white">
-                          {player.name}
-                        </span>
-                      </div>
-                      <div className="flex items-center">
-                        <span className="text-sm text-gray-500 dark:text-gray-300">
-                          {player.totalScore} pts
-                        </span>
-                        {session.has_score_target && session.score_target && session.score_target > 0 && player.totalScore >= session.score_target ? (
-                          <Trophy className="w-4 h-4 ml-2 text-yellow-500" />
-                        ) : null}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </main>
-    </div>
+    </GameLayout>
   );
 }

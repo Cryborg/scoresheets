@@ -2,9 +2,11 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { ArrowLeft, Save, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import ScoreInput from '@/components/ui/ScoreInput';
+import GameLayout from '@/components/layout/GameLayout';
+import GameCard from '@/components/layout/GameCard';
+import RankingSidebar from '@/components/layout/RankingSidebar';
 
 interface Player {
   id: number;
@@ -261,30 +263,17 @@ export default function YamsScoreSheet({ sessionId }: YamsScoreSheetProps) {
   const ranking = getPlayerRanking();
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <nav className="bg-white dark:bg-gray-800 shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <Link href="/dashboard" className="flex items-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 mr-4">
-                <ArrowLeft className="h-5 w-5" />
-              </Link>
-              <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
-                {session.session_name}
-              </h1>
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      <main className="max-w-6xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          <div className="lg:col-span-3">
-            <div className="bg-white dark:bg-gray-800 shadow rounded-lg">
-              <div className="px-4 py-5 sm:p-6">
-                <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-white mb-4">
-                  Feuille de score Yams
-                </h3>
+    <GameLayout 
+      sessionName={session.session_name}
+      sidebar={
+        <RankingSidebar
+          players={ranking}
+          scoreTarget={session.score_target}
+          hasScoreTarget={!!session.score_target}
+        />
+      }
+    >
+      <GameCard title="Feuille de score Yams">
                 
                 <div className="overflow-x-auto">
                   <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
@@ -463,50 +452,7 @@ export default function YamsScoreSheet({ sessionId }: YamsScoreSheetProps) {
                     </tbody>
                   </table>
                 </div>
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <div className="bg-white dark:bg-gray-800 shadow rounded-lg">
-              <div className="px-4 py-5 sm:p-6">
-                <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-white mb-4">
-                  Classement
-                </h3>
-                
-                {session.score_target && (
-                  <div className="mb-4 text-sm text-gray-600 dark:text-gray-400">
-                    Score à atteindre : <span className="font-semibold">{session.score_target} points</span>
-                  </div>
-                )}
-                
-                <div className="space-y-3">
-                  {ranking.map((player, index) => (
-                    <div key={player.id} className="flex items-center justify-between">
-                      <div className="flex items-center">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold mr-3 ${
-                          index === 0 ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
-                          index === 1 ? 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200' :
-                          index === 2 ? 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200' :
-                          'bg-gray-50 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
-                        }`}>
-                          {index + 1}
-                        </div>
-                        <span className="text-sm font-medium text-gray-900 dark:text-white">
-                          {player.name}
-                        </span>
-                      </div>
-                      <span className="text-sm text-gray-500 dark:text-gray-300">
-                        {player.totalScore} pts
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </main>
-    </div>
+              </GameCard>
+    </GameLayout>
   );
 }

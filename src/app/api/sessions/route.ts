@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db, initializeDatabase } from '@/lib/database-async';
+import { db, initializeDatabase } from '@/lib/database';
 import { getAuthenticatedUserId, unauthorizedResponse } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
       return unauthorizedResponse();
     }
 
-    const sessions = await db.prepare(`
+    const sessions = await db.execute({ sql: `
       SELECT 
         gs.id,
         gs.session_name,
@@ -38,9 +38,9 @@ export async function GET(request: NextRequest) {
       GROUP BY gs.id, gs.session_name, gs.date_played, g.name, gs.game_id
       ORDER BY gs.date_played DESC
       LIMIT 10
-    `).all(userId);
+    `, args: [userId] });
 
-    return NextResponse.json({ sessions });
+    return NextResponse.json({ sessions: sessions.rows });
   } catch (error) {
     console.error('Sessions error:', error);
     return NextResponse.json(

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { db, initializeDatabase } from '@/lib/database-async';
+import { db, initializeDatabase } from '@/lib/database';
 
 export async function GET() {
   try {
@@ -7,7 +7,7 @@ export async function GET() {
     await initializeDatabase();
     console.log('API /api/games: Database initialized');
     
-    const games = await db.prepare(`
+    const result = await db.execute(`
       SELECT 
         g.id,
         g.name,
@@ -23,7 +23,9 @@ export async function GET() {
       FROM games g
       JOIN game_categories gc ON g.category_id = gc.id
       ORDER BY gc.name, g.name
-    `).all();
+    `);
+
+    const games = result.rows;
 
     console.log('API /api/games: Found games:', games.length);
     return NextResponse.json({ games });

@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useTheme } from '@/components/ThemeProvider';
+import { useTheme } from '@/contexts/ThemeContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -13,6 +14,7 @@ export default function LoginPage() {
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
   const { theme } = useTheme();
+  const { login } = useAuth();
 
   useEffect(() => {
     setMounted(true);
@@ -50,12 +52,8 @@ export default function LoginPage() {
 
       if (response.ok) {
         console.log('Login successful, redirecting to dashboard...');
-        localStorage.setItem('userEmail', email);
-        localStorage.setItem('userData', JSON.stringify(data.user));
-        // Small delay to ensure cookie is set
-        setTimeout(() => {
-          window.location.href = '/dashboard';
-        }, 100);
+        login(data.user);
+        router.push('/dashboard');
       } else {
         setError(data.error || 'Une erreur est survenue');
       }

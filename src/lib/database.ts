@@ -166,6 +166,14 @@ export async function initializeDatabase(): Promise<void> {
 }
 
 async function seedInitialData(): Promise<void> {
+  // Ensure users table has is_admin column
+  try {
+    await tursoClient.execute(`ALTER TABLE users ADD COLUMN is_admin BOOLEAN DEFAULT FALSE`);
+    console.log('✅ Column is_admin added to users table');
+  } catch (error) {
+    // Column already exists or other error, ignore
+  }
+
   // Check if we already have categories
   const existingCategories = await tursoClient.execute('SELECT COUNT(*) as count FROM game_categories');
   const categoryCount = existingCategories.rows[0]?.count as number || 0;
@@ -177,6 +185,7 @@ async function seedInitialData(): Promise<void> {
       ('Jeux de dés', 'Jeux utilisant des dés'),
       ('Jeux de plateau', 'Jeux de société classiques')
     `);
+    console.log('✅ Game categories seeded');
   }
 
   // Ensure Yams exists

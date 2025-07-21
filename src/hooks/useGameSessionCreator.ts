@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { authenticatedFetch } from '@/lib/authClient';
 
 export interface Player {
@@ -84,16 +84,16 @@ export function useGameSessionCreator(game?: Game | null) {
     }
   };
 
-  const updatePlayer = (index: number, name: string) => {
+  const updatePlayer = useCallback((index: number, name: string) => {
     setState(prev => ({
       ...prev,
       players: prev.players.map((player, i) => 
         i === index ? { name } : player
       )
     }));
-  };
+  }, []);
 
-  const updateTeamPlayer = (teamIndex: number, playerIndex: number, name: string) => {
+  const updateTeamPlayer = useCallback((teamIndex: number, playerIndex: number, name: string) => {
     setState(prev => ({
       ...prev,
       teams: prev.teams.map((team, tIdx) =>
@@ -107,25 +107,29 @@ export function useGameSessionCreator(game?: Game | null) {
           : team
       )
     }));
-  };
+  }, []);
 
-  const addPlayer = () => {
-    if (!game || state.players.length >= game.max_players) return;
-    setState(prev => ({
-      ...prev,
-      players: [...prev.players, { name: '' }]
-    }));
-  };
+  const addPlayer = useCallback(() => {
+    setState(prev => {
+      if (!game || prev.players.length >= game.max_players) return prev;
+      return {
+        ...prev,
+        players: [...prev.players, { name: '' }]
+      };
+    });
+  }, [game]);
 
-  const removePlayer = (index: number) => {
-    if (!game || state.players.length <= game.min_players) return;
-    setState(prev => ({
-      ...prev,
-      players: prev.players.filter((_, i) => i !== index)
-    }));
-  };
+  const removePlayer = useCallback((index: number) => {
+    setState(prev => {
+      if (!game || prev.players.length <= game.min_players) return prev;
+      return {
+        ...prev,
+        players: prev.players.filter((_, i) => i !== index)
+      };
+    });
+  }, [game]);
 
-  const validateSession = (game?: Game | null) => {
+  const validateSession = useCallback((game?: Game | null) => {
     if (game) {
       const validPlayers = game.team_based 
         ? state.teams.flatMap(team => team.players).filter(p => p.trim())
@@ -151,9 +155,9 @@ export function useGameSessionCreator(game?: Game | null) {
     }
 
     return null;
-  };
+  }, [state.players, state.teams, state.hasScoreTarget, state.scoreTarget]);
 
-  const createSession = async (apiEndpoint: string, additionalPayload: Record<string, unknown> = {}) => {
+  const createSession = useCallback(async (apiEndpoint: string, additionalPayload: Record<string, unknown> = {}) => {
     const validationError = validateSession(game);
     if (validationError) {
       alert(validationError);
@@ -200,11 +204,11 @@ export function useGameSessionCreator(game?: Game | null) {
     } finally {
       setState(prev => ({ ...prev, loading: false }));
     }
-  };
+  }, [game, state.sessionName, state.players, state.teams, state.hasScoreTarget, state.scoreTarget, state.finishCurrentRound, state.scoreDirection, validateSession]);
 
-  const updateState = (updates: Partial<GameSessionCreatorState>) => {
+  const updateState = useCallback((updates: Partial<GameSessionCreatorState>) => {
     setState(prev => ({ ...prev, ...updates }));
-  };
+  }, []);
 
   return {
     state,

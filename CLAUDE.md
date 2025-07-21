@@ -1,186 +1,115 @@
-# Claude.md - Instructions pour l'assistant
+# Claude.md - Guide de développement Scoresheets
 
-## Commandes de test systématiques
+## Architecture technique
 
-Avant de terminer toute modification de code, toujours exécuter dans cet ordre :
+- **Framework :** Next.js 15 avec TypeScript
+- **Base de données :** Turso (cloud SQLite) en production, SQLite local en développement  
+- **Déploiement :** Vercel (auto-deploy depuis main)
+- **Styles :** Tailwind CSS avec système de thèmes dark/light
+- **Tests :** Jest + React Testing Library
 
-```bash
-# 1. Vérification ESLint stricte et TypeScript
-npm run lint:strict
-
-# 2. Tests unitaires et d'intégration
-npm test
-```
-
-**Important :** Utiliser `npm run lint:strict` au lieu de `npm run lint` car il détecte beaucoup plus d'erreurs (types `any`, imports non optimisés, variables inutilisées, etc.)
-
-### Tests disponibles
+## Commandes essentielles
 
 ```bash
-# Lancer tous les tests une fois
-npm test
+# Validation obligatoire avant commit
+npm run lint:strict  # ESLint strict + TypeScript
+npm test            # Tests unitaires + intégration
 
-# Lancer les tests en mode watch (recommandé pendant le développement)
-npm run test:watch
+# Développement
+npm run dev         # Serveur de développement
+npm run quality     # lint:strict + tests en une commande
 
-# Lancer les tests avec rapport de couverture
-npm run test:coverage
-
-# ESLint strict (obligatoire avant chaque modification)
-npm run lint:strict
-
-# ESLint standard
-npm run lint
-
-# ESLint avec auto-fix
-npm run lint:fix
-
-# Vérification TypeScript
-npm run typecheck
-
-# Commande complète qualité (lint strict + typecheck + tests)
-npm run quality
+# Versions
+npm run version:patch   # Bug fixes
+npm run version:minor   # Nouvelles fonctionnalités
+npm run version:major   # Breaking changes
 ```
 
-### Structure des tests
+## Structure des jeux
 
-- **Tests d'API** : `src/__tests__/api/` - Testent les routes API critiques
-- **Tests de composants** : `src/__tests__/components/` - Testent les composants React
-- **Tests d'intégration** : `src/__tests__/integration/` - Testent la base de données
-- **Tests utilitaires** : `src/__tests__/lib/` - Testent les fonctions utilitaires
+### Jeu existant : Yams (slug: 'yams')
+- **Type :** Jeu de dés, scoring par catégories
+- **Composant :** `src/components/scoresheets/YamsScoreSheet.tsx`
+- **Route API :** `/api/games/yams/sessions/[sessionId]/scores`
 
-## Gestion des versions
+### Ajout d'un nouveau jeu
 
-### Montée de version
-Pour incrémenter la version de l'application :
+1. **Base de données :** Ajouter dans `src/lib/database.ts` → `seedInitialData()`
+   ```sql
+   INSERT INTO games (name, slug, category_id, is_implemented, score_type, team_based, min_players, max_players, score_direction)
+   VALUES ('Nouveau Jeu', 'nouveau-jeu', 1, 1, 'rounds', 0, 2, 6, 'higher');
+   ```
 
+2. **Page de création :** `src/app/games/[slug]/new/page.tsx` (utilise le slug)
+
+3. **Composant scoresheet :** `src/components/scoresheets/NouveauJeuScoreSheet.tsx`
+
+4. **Route API scores :** `/api/games/[slug]/sessions/[sessionId]/scores/route.ts`
+
+5. **Tests :** Créer dans `src/__tests__/api/games/` et `src/__tests__/components/`
+
+### Types de scoring
+- `'categories'` : Scoring par catégories comme Yams
+- `'rounds'` : Scoring par manches comme Belote
+- `score_direction` : `'higher'` (plus haut gagne) ou `'lower'` (plus bas gagne)
+
+## Base de données (Turso SQLite)
+
+### Tables principales
+- `games` : Liste des jeux disponibles
+- `game_sessions` : Parties créées par les utilisateurs
+- `players` : Joueurs d'une partie
+- `scores` : Scores enregistrés par joueur/manche/catégorie
+- `users` : Comptes utilisateurs (auth JWT)
+
+### Variables d'environnement
 ```bash
-# Version patch (0.1.0 → 0.1.1) - corrections de bugs
-npm run version:patch
+# Production (Vercel)
+TURSO_DATABASE_URL=libsql://[base].turso.io
+TURSO_AUTH_TOKEN=eyJ...
+ADMIN_EMAIL=admin@example.com
+ADMIN_PASSWORD=SecurePassword
+JWT_SECRET=long-random-string
 
-# Version minor (0.1.0 → 0.2.0) - nouvelles fonctionnalités
-npm run version:minor  
-
-# Version major (0.1.0 → 1.0.0) - changements breaking
-npm run version:major
-```
-
-### Affichage de la version
-- La version est automatiquement affichée en bas à gauche de toutes les pages
-- Elle est récupérée depuis le `package.json`
-- Le composant `VersionFooter` gère l'affichage
-
-### Tests critiques à vérifier
-
-Ces tests doivent TOUJOURS passer après chaque modification :
-
-1. **API Games** (`/api/games`) - Récupération des jeux
-2. **API Sessions** (`/api/games/[slug]/sessions`) - Création de parties
-3. **ThemeProvider** - Gestion des thèmes sans erreur d'hydratation  
-4. **Authentification** - Validation des tokens JWT
-5. **Base de données** - CRUD des sessions, joueurs et scores
-
-### Processus recommandé
-1. Faire les modifications de code
-2. **Obligatoire :** Lancer ESLint strict : `npm run lint:strict`
-3. **Obligatoire :** Lancer les tests : `npm test`
-4. Incrémenter la version appropriée
-5. Commiter les changements
-6. Déployer
-
-**Note :** `npm run quality` combine les étapes 2 et 3 en une seule commande
-
-## Déploiement et correction en production
-
-### URL de production
-- **URL actuelle** : [Variable VERCEL_URL ou voir dashboard Vercel]
-- **Dashboard Vercel** : https://vercel.com/dashboard
-
-### Endpoints de maintenance en production
-
-```bash
-# Vérifier la structure de la base de données
-curl https://[YOUR_VERCEL_URL]/api/admin/check-db
-
-# Corriger la structure DB et droits admin (POST)
-curl -X POST https://[YOUR_VERCEL_URL]/api/admin/check-db
-
-# Accorder droits admin à l'utilisateur configuré
-curl -X POST https://[YOUR_VERCEL_URL]/api/admin/grant-admin
-
-# Déployer Belote en production
-curl -X POST https://[YOUR_VERCEL_URL]/api/admin/deploy-belote
-```
-
-### Problèmes courants en production
-
-#### 1. Colonne manquante (ex: is_admin)
-**Erreur :** `no such column: is_admin`
-**Solution :** 
-```bash
-curl -X POST https://[YOUR_VERCEL_URL]/api/admin/check-db
-```
-
-#### 2. Utilisateur sans droits admin
-**Symptôme :** Pas d'accès à la page admin
-**Solution :**
-```bash
-curl -X POST https://[YOUR_VERCEL_URL]/api/admin/grant-admin
-```
-Puis se déconnecter/reconnecter
-
-#### 3. Jeu manquant en production
-**Symptôme :** Belote/nouveau jeu non visible
-**Solution :**
-```bash
-curl -X POST https://[YOUR_VERCEL_URL]/api/admin/deploy-belote
-```
-
-#### 4. URL de déploiement inconnue
-**Script de vérification :**
-```bash
-node scripts/check-deployment.js
-```
-
-### Comptes administrateurs
-- **Email :** [Voir variables d'environnement]
-- **Mot de passe :** [Voir variables d'environnement]
-- **Droits :** Accès admin (is_admin = 1)
-
-### Architecture base de données
-- **Production :** Turso (cloud SQLite)
-- **Développement :** SQLite local (file:./data/scoresheets.db)
-- **Migration automatique :** Voir `src/lib/database.ts` → `seedInitialData()`
-
-### Variables d'environnement requises
-
-#### Production (Vercel)
-```
-TURSO_DATABASE_URL=libsql://[votre-base].turso.io
-TURSO_AUTH_TOKEN=eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9...
-ADMIN_EMAIL=votre-email@example.com
-ADMIN_PASSWORD=VotreMotDePasseSecurise
-JWT_SECRET=votre-jwt-secret-long-et-complexe
-```
-
-#### Développement (.env.local)
-```
-# Base de données Turso
+# Développement (.env.local)
 TURSO_DATABASE_URL=file:./data/scoresheets.db
-# TURSO_AUTH_TOKEN non requis en local
-
-# Compte administrateur
-ADMIN_EMAIL=votre-email@example.com  
-ADMIN_PASSWORD=VotreMotDePasseSecurise
-
-# JWT pour l'authentification
-JWT_SECRET=votre-jwt-secret-long-et-complexe
+# TURSO_AUTH_TOKEN pas nécessaire en local
+ADMIN_EMAIL=admin@example.com
+ADMIN_PASSWORD=SecurePassword  
+JWT_SECRET=long-random-string
 ```
 
-## Notes sur le projet
+## Authentification et droits
 
-- Base de données : Turso en production, SQLite en développement
-- Jeu principal : Yams (slug: 'yams')
-- Architecture : Next.js 15 avec TypeScript
-- Styles : Tailwind CSS
-- Version actuelle : Affichée automatiquement en bas des pages
+- **Auth :** JWT tokens, gestion dans `src/lib/auth.ts`
+- **Admin :** Flag `is_admin` dans la table users
+- **Pages protégées :** Middleware dans `src/contexts/AuthContext.tsx`
+
+## APIs admin (production)
+
+```bash
+# Corriger structure DB + droits admin
+curl -X POST https://[VERCEL_URL]/api/admin/check-db
+
+# Déployer un nouveau jeu
+curl -X POST https://[VERCEL_URL]/api/admin/deploy-[game-slug]
+```
+
+## Composants UI importants
+
+- `ThemeProvider` : Gestion dark/light theme
+- `VersionFooter` : Affichage version depuis package.json  
+- `ThemeToggle` : Bouton de changement de thème
+- `GameList` : Liste des jeux sur dashboard
+- `[Game]ScoreSheet` : Interfaces de scoring par jeu
+
+## Tests critiques
+
+Ces tests doivent passer à chaque modification :
+- API Games (`/api/games`) 
+- API Sessions (`/api/games/[slug]/sessions`)
+- ThemeProvider (sans erreurs d'hydratation)
+- Authentification JWT
+- CRUD base de données
+
+**Note :** Utiliser `@ts-expect-error` pour les warnings PhpStorm SQL dans les tests

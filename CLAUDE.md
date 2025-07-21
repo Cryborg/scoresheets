@@ -90,6 +90,68 @@ Ces tests doivent TOUJOURS passer après chaque modification :
 
 **Note :** `npm run quality` combine les étapes 2 et 3 en une seule commande
 
+## Déploiement et correction en production
+
+### URL de production
+- **URL actuelle** : https://scoresheets-lime.vercel.app
+- **Dashboard Vercel** : https://vercel.com/dashboard (projet "scoresheets")
+
+### Endpoints de maintenance en production
+
+```bash
+# Vérifier la structure de la base de données
+curl https://scoresheets-lime.vercel.app/api/admin/check-db
+
+# Corriger la structure DB et droits admin (POST)
+curl -X POST https://scoresheets-lime.vercel.app/api/admin/check-db
+
+# Accorder droits admin à cryborg.live@gmail.com
+curl -X POST https://scoresheets-lime.vercel.app/api/admin/grant-admin
+
+# Déployer Belote en production
+curl -X POST https://scoresheets-lime.vercel.app/api/admin/deploy-belote
+```
+
+### Problèmes courants en production
+
+#### 1. Colonne manquante (ex: is_admin)
+**Erreur :** `no such column: is_admin`
+**Solution :** 
+```bash
+curl -X POST https://scoresheets-lime.vercel.app/api/admin/check-db
+```
+
+#### 2. Utilisateur sans droits admin
+**Symptôme :** Pas d'accès à la page admin
+**Solution :**
+```bash
+curl -X POST https://scoresheets-lime.vercel.app/api/admin/grant-admin
+```
+Puis se déconnecter/reconnecter
+
+#### 3. Jeu manquant en production
+**Symptôme :** Belote/nouveau jeu non visible
+**Solution :**
+```bash
+curl -X POST https://scoresheets-lime.vercel.app/api/admin/deploy-belote
+```
+
+#### 4. URL de déploiement inconnue
+**Script de vérification :**
+```bash
+node scripts/check-deployment.js
+```
+
+### Comptes administrateurs
+- **Email :** cryborg.live@gmail.com  
+- **Mot de passe :** Célibataire1979$
+- **Droits :** Accès admin (is_admin = 1)
+
+### Architecture base de données
+- **Production :** Turso (cloud SQLite)
+- **Développement :** SQLite local (file:./data/scoresheets.db)
+- **Migration automatique :** Voir `src/lib/database.ts` → `seedInitialData()`
+
 ## Notes sur le projet
 
 - Base de données : Turso en production, SQLite en développement

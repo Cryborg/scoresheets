@@ -71,3 +71,55 @@ html.dark .dark\:border-gray-600 {
   --tw-border-opacity: 1;
   border-color: rgb(45 45 45 / var(--tw-border-opacity));
 }
+
+/* Input fields in dark mode */
+html.dark input[type="text"],
+html.dark input[type="email"],
+html.dark input[type="password"],
+html.dark input[type="number"],
+html.dark input.dark\:bg-gray-800,
+html.dark .dark\:bg-gray-800 input,
+html.dark input.dark\:bg-gray-700,
+html.dark .dark\:bg-gray-700 input {
+  --tw-bg-opacity: 1;
+  background-color: rgb(31 41 55 / var(--tw-bg-opacity));
+  --tw-text-opacity: 1;
+  color: rgb(248 250 252 / var(--tw-text-opacity));
+}
+
+html.dark input[type="text"]:focus,
+html.dark input[type="email"]:focus,
+html.dark input[type="password"]:focus,
+html.dark input[type="number"]:focus {
+  --tw-bg-opacity: 1;
+  background-color: rgb(31 41 55 / var(--tw-bg-opacity));
+}
+
+/* Select and textarea elements */
+html.dark select,
+html.dark textarea,
+html.dark select.dark\:bg-gray-800,
+html.dark select.dark\:bg-gray-700,
+html.dark textarea.dark\:bg-gray-800,
+html.dark textarea.dark\:bg-gray-700 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(31 41 55 / var(--tw-bg-opacity));
+  --tw-text-opacity: 1;
+  color: rgb(248 250 252 / var(--tw-text-opacity));
+}
+
+/* Placeholder text in dark mode */
+html.dark input::placeholder,
+html.dark textarea::placeholder {
+  --tw-text-opacity: 1;
+  color: rgb(107 114 128 / var(--tw-text-opacity));
+}
+
+/* Checkbox and radio buttons */
+html.dark input[type="checkbox"],
+html.dark input[type="radio"] {
+  --tw-bg-opacity: 1;
+  background-color: rgb(31 41 55 / var(--tw-bg-opacity));
+  --tw-border-opacity: 1;
+  border-color: rgb(75 85 99 / var(--tw-border-opacity));
+}

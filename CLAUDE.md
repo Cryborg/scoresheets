@@ -156,6 +156,51 @@ Créer `src/components/scoresheets/NouveauJeuScoreSheet.tsx` :
 
 **❌ NE JAMAIS créer de routes spécifiques** comme `/api/games/tarot/sessions`
 
+## 🚀 Préparation projet Multiplayer
+
+Ce projet servira de base pour créer la version multiplayer. Voici la connaissance à transférer :
+
+### Fichiers clés à copier dans le nouveau projet :
+```
+📁 OBLIGATOIRES :
+├── src/components/scoresheets/        → Tous les ScoreSheets (adapter)
+├── src/components/layout/            → GameLayout, GameCard, RankingSidebar  
+├── src/components/ui/                → ScoreInput, LoadingSpinner, etc.
+├── src/lib/database.ts               → Structure de base (adapter tables)
+├── src/lib/auth.ts                   → Système d'auth JWT
+├── src/lib/gameComponentLoader.tsx   → Loader de composants
+├── src/lib/constants.ts              → Messages, constantes
+├── tailwind.config.ts                → Configuration styles
+├── package.json dependencies         → Même stack technique
+
+📄 DOCUMENTATION :
+├── MULTIPLAYER_BLUEPRINT.md          → Bible technique complète
+├── CLAUDE.md                         → Ce fichier adapté
+```
+
+### Stack technique éprouvé à conserver :
+- **Next.js 15** + TypeScript + Turbo
+- **Turso** (SQLite cloud) - parfait pour le multiplayer !  
+- **Tailwind CSS** + Dark/Light theme
+- **Vercel** deployment (compatible polling)
+- **Jest** + React Testing Library
+
+### Patterns de code établis :
+- Routes API génériques `[slug]`
+- Interfaces `Player`, `GameSession` standardisées  
+- Hooks `useGameSessionCreator`
+- Composants `ScoreInput` optimisés
+- Système `gameComponentLoader` dynamique
+
+### Jeux prêts pour adaptation multiplayer :
+1. **Yams** → Vue individuelle par catégories ✅
+2. **Tarot** → Un preneur + autres joueurs ✅  
+3. **Bridge** → 4 positions fixes Nord/Sud/Est/Ouest ✅
+4. **Belote** → Équipes de 2 ✅
+5. **Mille Bornes** → Vue individuelle km + primes ✅
+
+Le `MULTIPLAYER_BLUEPRINT.md` contient TOUTE l'architecture technique nécessaire !
+
 ### Système de création harmonisé
 
 **Composants réutilisables (NE PAS dupliquer) :**

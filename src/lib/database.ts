@@ -14,20 +14,19 @@ const tursoClient: Client = createClient({
   authToken: isProduction ? process.env.TURSO_AUTH_TOKEN : undefined
 });
 
-// Backward compatibility wrapper for db.prepare() API
-// TODO: Remove once all routes migrate to db.execute()
+// Backward compatibility wrapper for legacy db.prepare() API
 const legacyWrapper = {
   execute: tursoClient.execute.bind(tursoClient),
   prepare: (sql: string) => ({
-    get: async (...params: any[]) => {
+    get: async (...params: unknown[]) => {
       const result = await tursoClient.execute({ sql, args: params });
       return result.rows[0];
     },
-    all: async (...params: any[]) => {
+    all: async (...params: unknown[]) => {
       const result = await tursoClient.execute({ sql, args: params });
       return result.rows;
     },
-    run: async (...params: any[]) => {
+    run: async (...params: unknown[]) => {
       const result = await tursoClient.execute({ sql, args: params });
       return {
         lastInsertRowid: Number(result.lastInsertRowId),
@@ -170,7 +169,7 @@ async function seedInitialData(): Promise<void> {
   try {
     await tursoClient.execute(`ALTER TABLE users ADD COLUMN is_admin BOOLEAN DEFAULT FALSE`);
     console.log('✅ Column is_admin added to users table');
-  } catch (error) {
+  } catch {
     // Column already exists or other error, ignore
   }
 

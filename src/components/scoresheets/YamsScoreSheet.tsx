@@ -7,6 +7,8 @@ import ScoreInput from '@/components/ui/ScoreInput';
 import GameLayout from '@/components/layout/GameLayout';
 import GameCard from '@/components/layout/GameCard';
 import RankingSidebar from '@/components/layout/RankingSidebar';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import { LOADING_MESSAGES } from '@/lib/constants';
 
 interface Player {
   id: number;
@@ -245,19 +247,11 @@ export default function YamsScoreSheet({ sessionId }: YamsScoreSheetProps) {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
-        <div className="text-gray-500 dark:text-gray-400">Chargement...</div>
-      </div>
-    );
+    return <LoadingSpinner message={LOADING_MESSAGES.SCORESHEET} />;
   }
 
   if (!session) {
-    return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
-        <div className="text-red-500">Partie non trouvée</div>
-      </div>
-    );
+    return <LoadingSpinner message="Partie non trouvée" />;
   }
 
   const ranking = getPlayerRanking();

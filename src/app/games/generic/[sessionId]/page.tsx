@@ -7,6 +7,8 @@ import { authenticatedFetch } from '@/lib/authClient';
 import GameLayout from '@/components/layout/GameLayout';
 import GameCard from '@/components/layout/GameCard';
 import RankingSidebar from '@/components/layout/RankingSidebar';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import { LOADING_MESSAGES } from '@/lib/constants';
 
 interface Player {
   id: number;
@@ -183,19 +185,11 @@ export default function GenericSessionPage({ params }: GenericSessionPageProps) 
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
-        <div className="text-gray-500 dark:text-gray-400">Chargement...</div>
-      </div>
-    );
+    return <LoadingSpinner message={LOADING_MESSAGES.SESSION} />;
   }
 
   if (!session) {
-    return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
-        <div className="text-red-500">Partie non trouvée</div>
-      </div>
-    );
+    return <LoadingSpinner message="Partie non trouvée" />;
   }
 
   const ranking = getPlayerRanking();

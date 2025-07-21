@@ -1,4 +1,3 @@
-import React from 'react';
 
 interface Session {
   has_score_target?: boolean;

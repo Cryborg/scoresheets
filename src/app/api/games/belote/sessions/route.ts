@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db, initializeDatabase } from '@/lib/database';
 import { getAuthenticatedUserId, unauthorizedResponse } from '@/lib/auth';
+import { ERROR_MESSAGES, HTTP_STATUS } from '@/lib/constants';
 
 export async function POST(request: NextRequest) {
   try {
@@ -32,7 +33,7 @@ export async function POST(request: NextRequest) {
     } | undefined;
     
     if (!game) {
-      return NextResponse.json({ error: 'Jeu Belote non trouvé' }, { status: 404 });
+      return NextResponse.json({ error: ERROR_MESSAGES.NOT_FOUND }, { status: HTTP_STATUS.NOT_FOUND });
     }
 
     // Create session
@@ -69,8 +70,8 @@ export async function POST(request: NextRequest) {
         sessionId = Number(lastSession.id);
       } else {
         return NextResponse.json(
-          { error: 'Erreur lors de la création de la session' },
-          { status: 500 }
+          { error: ERROR_MESSAGES.DATABASE_ERROR },
+          { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
         );
       }
     }
@@ -111,8 +112,8 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Error creating Belote session:', error);
     return NextResponse.json(
-      { error: 'Erreur serveur' },
-      { status: 500 }
+      { error: ERROR_MESSAGES.SERVER_ERROR },
+      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
     );
   }
 }

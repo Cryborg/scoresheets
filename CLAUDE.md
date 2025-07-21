@@ -156,27 +156,29 @@ Créer `src/components/scoresheets/NouveauJeuScoreSheet.tsx` :
 
 **❌ NE JAMAIS créer de routes spécifiques** comme `/api/games/tarot/sessions`
 
-## 🚀 Préparation projet Multiplayer
+## 🚀 Transition vers projet Multiplayer
 
-Ce projet servira de base pour créer la version multiplayer. Voici la connaissance à transférer :
+Ce projet v1 sert de référence complète pour créer la version multiplayer.
 
-### Fichiers clés à copier dans le nouveau projet :
+### 📂 Architecture de transition :
 ```
-📁 OBLIGATOIRES :
-├── src/components/scoresheets/        → Tous les ScoreSheets (adapter)
-├── src/components/layout/            → GameLayout, GameCard, RankingSidebar  
-├── src/components/ui/                → ScoreInput, LoadingSpinner, etc.
-├── src/lib/database.ts               → Structure de base (adapter tables)
-├── src/lib/auth.ts                   → Système d'auth JWT
-├── src/lib/gameComponentLoader.tsx   → Loader de composants
-├── src/lib/constants.ts              → Messages, constantes
-├── tailwind.config.ts                → Configuration styles
-├── package.json dependencies         → Même stack technique
+📁 DOSSIER ACTUEL :
+├── .backup/                          → COPIE COMPLÈTE du projet v1
+│   ├── src/components/scoresheets/   → 5 jeux implémentés
+│   ├── src/components/layout/        → GameLayout, RankingSidebar
+│   ├── src/components/ui/            → ScoreInput, LoadingSpinner
+│   ├── src/lib/                      → database, auth, gameLoader
+│   └── ...                          → Toute l'architecture éprouvée
 
-📄 DOCUMENTATION :
+📄 DOCUMENTATION À LA RACINE :
 ├── MULTIPLAYER_BLUEPRINT.md          → Bible technique complète
-├── CLAUDE.md                         → Ce fichier adapté
+├── CLAUDE.md                         → Guide de développement
 ```
+
+**🎯 Processus simplifié :**
+1. Code source v1 → dossier `.backup/`
+2. Documentation technique → racine du projet
+3. Développement multiplayer → nouveau code avec `.backup/` comme référence
 
 ### Stack technique éprouvé à conserver :
 - **Next.js 15** + TypeScript + Turbo

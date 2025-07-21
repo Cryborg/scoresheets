@@ -218,27 +218,31 @@ src/components/multiplayer/
 - **Déploiement**: Vercel (compatible polling)
 - **Auth**: JWT optionnel (sessions anonymes possibles)
 
-## 📋 Fichiers à copier dans le nouveau projet
+## 📋 Architecture de référence
 
-### Structure complète à réutiliser
+### Code source disponible dans .backup/
+Tout le code source du projet v1 est disponible dans le dossier `.backup/` pour référence et réutilisation.
+
+### Fichiers clés à adapter/réutiliser :
 ```
-src/components/scoresheets/
-├── YamsScoreSheet.tsx       → Réutilisable tel quel
+.backup/src/components/scoresheets/
+├── YamsScoreSheet.tsx       → Réutiliser comme base
 ├── TarotScoreSheet.tsx      → Adapter pour vue individuelle  
-├── BridgeScoreSheet.tsx     → Adapter pour équipes
+├── BridgeScoreSheet.tsx     → Adapter pour équipes multiplayer
 ├── BeloteScoreSheet.tsx     → Adapter si nécessaire
 ├── MilleBornesScoreSheet.tsx → Adapter pour vue individuelle
 
-src/components/layout/
-├── GameLayout.tsx           → Adapter pour StatusBar multi
-├── GameCard.tsx             → Réutilisable tel quel
-├── RankingSidebar.tsx       → Adapter pour participants
+.backup/src/components/layout/
+├── GameLayout.tsx           → Adapter pour StatusBar multiplayer
+├── GameCard.tsx             → Réutiliser tel quel
+├── RankingSidebar.tsx       → Adapter pour participants temps réel
 
-src/components/ui/           → Tout réutilisable tel quel
-src/lib/
-├── database.ts              → Adapter avec nouvelles tables
-├── auth.ts                  → Réutilisable 
-├── gameComponentLoader.tsx  → Adapter pour vues multi
+.backup/src/components/ui/   → Composants réutilisables tel quel
+.backup/src/lib/
+├── database.ts              → Base + nouvelles tables multiplayer
+├── auth.ts                  → Système éprouvé à réutiliser 
+├── gameComponentLoader.tsx  → Adapter pour vues multiplayer
+├── constants.ts             → Messages et constantes
 ```
 
 ## 🎯 Plan de développement recommandé

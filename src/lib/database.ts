@@ -237,6 +237,31 @@ async function seedInitialData(): Promise<void> {
     console.log('✅ Belote game added');
   }
 
+  // Ensure Tarot exists
+  const existingTarot = await tursoClient.execute({
+    sql: 'SELECT id FROM games WHERE slug = ?',
+    args: ['tarot']
+  });
+  
+  if (existingTarot.rows.length === 0) {
+    await tursoClient.execute(`
+      INSERT INTO games (name, slug, category_id, rules, is_implemented, score_type, team_based, min_players, max_players, score_direction)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `, [
+      'Tarot',
+      'tarot',
+      1, // Jeux de cartes
+      'Jeu de cartes français avec enchères et atouts. Se joue à 3, 4 ou 5 joueurs avec un jeu de 78 cartes. Objectif: réaliser le contrat annoncé.',
+      1, // is_implemented
+      'rounds',
+      0, // team_based (dynamique selon la donne)
+      3, // min_players
+      5, // max_players
+      'higher'
+    ]);
+    console.log('✅ Tarot game added');
+  }
+
   // Create admin user if it doesn't exist, or update existing user to admin
   const adminEmail = process.env.ADMIN_EMAIL;
   const adminPassword = process.env.ADMIN_PASSWORD;

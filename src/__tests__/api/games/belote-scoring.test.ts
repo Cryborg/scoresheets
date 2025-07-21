@@ -28,13 +28,7 @@ const mockPlayers = [
   { id: 4, name: 'David', position: 3 }    // Team 2
 ];
 
-const mockScoreData = [
-  // Round 1: Team 1 = 160 pts, Team 2 = 2 pts
-  { session_id: 123, player_id: 1, round_number: 1, score_type: 'round_score', score_value: 80 }, // Alice (Team 1)
-  { session_id: 123, player_id: 3, round_number: 1, score_type: 'round_score', score_value: 80 }, // Charlie (Team 1)
-  { session_id: 123, player_id: 2, round_number: 1, score_type: 'round_score', score_value: 1 },  // Bob (Team 2)
-  { session_id: 123, player_id: 4, round_number: 1, score_type: 'round_score', score_value: 1 },  // David (Team 2)
-];
+// Removed unused variable - test data is now generated dynamically in each test
 
 jest.mock('../../../lib/database', () => ({
   db: {

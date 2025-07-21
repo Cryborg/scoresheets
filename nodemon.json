@@ -1,0 +1,6 @@
+{
+  "watch": ["src/lib/database.ts", ".env.local", ".env"],
+  "ext": "ts,js,json",
+  "ignore": ["src/**/*.test.ts"],
+  "exec": "killall -9 node ; npm run dev"
+}

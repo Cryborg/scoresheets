@@ -12,6 +12,9 @@ import AuthGuard from '@/components/AuthGuard';
 export default function NewGamePage() {
   const params = useParams();
   const slug = params.slug as string;
+  
+  console.log('[DEBUG NewGamePage] Slug:', slug);
+  console.log('[DEBUG NewGamePage] Full params:', params);
   const router = useRouter();
   
   const [game, setGame] = useState<Game | null>(null);
@@ -32,9 +35,12 @@ export default function NewGamePage() {
       const response = await authenticatedFetch('/api/games');
       if (response.ok) {
         const data = await response.json();
+        console.log('[DEBUG NewGamePage] All games:', data.games);
         const foundGame = data.games.find((g: Game) => g.slug === slug);
+        console.log('[DEBUG NewGamePage] Found game:', foundGame);
         
         if (!foundGame) {
+          console.log('[DEBUG NewGamePage] Game not found, redirecting to dashboard');
           router.push('/dashboard');
           return;
         }

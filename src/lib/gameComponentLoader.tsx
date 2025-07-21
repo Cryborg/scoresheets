@@ -27,6 +27,9 @@ const specificComponents: Record<string, ComponentType<ScoreSheetProps>> = {
   'belote': dynamic(() => import('@/components/scoresheets/BeloteScoreSheet'), {
     loading: LoadingComponent
   }),
+  'tarot': dynamic(() => import('@/components/scoresheets/TarotScoreSheet'), {
+    loading: LoadingComponent
+  }),
 };
 
 /**

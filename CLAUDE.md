@@ -16,7 +16,8 @@ npm run lint:strict  # ESLint strict + TypeScript
 npm test            # Tests unitaires + intégration
 
 # Développement
-npm run dev         # Serveur de développement
+npm run dev         # Serveur de développement (hot reload automatique)
+npm run dev:watch   # Redémarre automatiquement si modif database.ts ou .env
 npm run quality     # lint:strict + tests en une commande
 
 # Versions
@@ -24,6 +25,21 @@ npm run version:patch   # Bug fixes
 npm run version:minor   # Nouvelles fonctionnalités
 npm run version:major   # Breaking changes
 ```
+
+### ⚠️ Quand redémarrer le serveur dev
+
+**Rappeler à l'utilisateur de relancer `npm run dev` après :**
+- 📦 Installation de nouvelles dépendances (`npm install`)
+- 🔧 Modification de `.env.local` ou `.env`
+- ⚙️ Modification de `next.config.js`
+- 🗄️ Ajout d'un nouveau jeu dans `database.ts` → `seedInitialData()`
+- 📁 Création de nouvelles routes API (parfois nécessaire)
+
+**Pas besoin de relancer pour :**
+- ✅ Modifications de composants React
+- ✅ Modifications de styles CSS/Tailwind
+- ✅ Modifications dans les routes API existantes
+- ✅ Ajout de nouvelles pages
 
 ## Structure des jeux
 
@@ -36,23 +52,109 @@ npm run version:major   # Breaking changes
 
 **⚠️ IMPORTANT :** Utiliser le système harmonisé de création de jeux !
 
-1. **Base de données :** Ajouter dans `src/lib/database.ts` → `seedInitialData()`
-   ```sql
-   INSERT INTO games (name, slug, category_id, is_implemented, score_type, team_based, min_players, max_players, score_direction)
-   VALUES ('Nouveau Jeu', 'nouveau-jeu', 1, 1, 'rounds', 0, 2, 6, 'higher');
-   ```
+#### 1. Base de données
+Ajouter dans `src/lib/database.ts` → `seedInitialData()` :
+```typescript
+const existingGame = await tursoClient.execute({
+  sql: 'SELECT id FROM games WHERE slug = ?',
+  args: ['nouveau-jeu']
+});
 
-2. **Page de création :** La page `src/app/games/[slug]/new/page.tsx` est déjà générique !
-   - ✅ **Utilise automatiquement** `useGameSessionCreator` hook
-   - ✅ **Utilise automatiquement** `GameSessionForm` component  
-   - ✅ **Interface harmonisée** avec tous les autres jeux
-   - 🔧 **Pas besoin de coder** - le système s'adapte au `slug` et aux propriétés du jeu
+if (existingGame.rows.length === 0) {
+  await tursoClient.execute(`
+    INSERT INTO games (name, slug, category_id, rules, is_implemented, score_type, team_based, min_players, max_players, score_direction)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `, [
+    'Nouveau Jeu',
+    'nouveau-jeu',
+    1, // 1=cartes, 2=dés, 3=plateau
+    'Description des règles',
+    1, // is_implemented
+    'rounds', // ou 'categories' comme Yams
+    0, // 0=individuel, 1=équipes
+    2, // min_players
+    6, // max_players
+    'higher' // ou 'lower'
+  ]);
+}
+```
 
-3. **Composant scoresheet :** `src/components/scoresheets/NouveauJeuScoreSheet.tsx`
+#### 2. Pages (NE PAS CRÉER !)
+**❌ NE PAS créer** :
+- `/app/games/nouveau-jeu/new/page.tsx` (utilise `[slug]/new`)
+- `/app/api/games/nouveau-jeu/*` (utilise les routes `[slug]`)
 
-4. **Route API scores :** `/api/games/[slug]/sessions/[sessionId]/scores/route.ts`
+**✅ CRÉER UNIQUEMENT** :
+```bash
+mkdir -p src/app/games/nouveau-jeu/[sessionId]
+```
 
-5. **Tests :** Créer dans `src/__tests__/api/games/` et `src/__tests__/components/`
+Puis créer `src/app/games/nouveau-jeu/[sessionId]/page.tsx` :
+```typescript
+import NouveauJeuScoreSheet from '@/components/scoresheets/NouveauJeuScoreSheet';
+
+export default async function NouveauJeuSessionPage({ params }: { params: Promise<{ sessionId: string }> }) {
+  const { sessionId } = await params;
+  return <NouveauJeuScoreSheet sessionId={sessionId} />;
+}
+```
+
+#### 3. Composant ScoreSheet
+Créer `src/components/scoresheets/NouveauJeuScoreSheet.tsx` :
+
+**⚠️ IMPORTANT** : Ajouter le composant dans `src/lib/gameComponentLoader.tsx` :
+```typescript
+'nouveau-jeu': dynamic(() => import('@/components/scoresheets/NouveauJeuScoreSheet'), {
+  loading: LoadingComponent
+}),
+```
+
+**Structure requise** :
+- Utiliser `fetch('/api/games/nouveau-jeu/sessions/${sessionId}')` pour GET
+- Utiliser `fetch('/api/games/nouveau-jeu/sessions/${sessionId}/rounds')` pour POST (jeux par manches)
+- Utiliser `fetch('/api/games/nouveau-jeu/sessions/${sessionId}/scores')` pour POST (jeux par catégories)
+
+**Format des données API** :
+```typescript
+// GET retourne :
+{
+  session: {
+    id: number;
+    session_name: string;
+    has_score_target: number;
+    score_target?: number;
+    players: Player[];
+    // Pour score_type='rounds' :
+    rounds: Array<{
+      round_number: number;
+      scores: { [playerId: number]: number };
+    }>;
+    // Pour score_type='categories' :
+    scores: { [categoryId: string]: { [playerId: number]: number } };
+  }
+}
+
+// POST rounds attend :
+{
+  scores: Array<{ playerId: number; score: number }>
+}
+
+// POST scores attend :
+{
+  categoryId: string;
+  playerId: number;
+  score: number;
+}
+```
+
+#### 4. Routes API (DÉJÀ EXISTANTES !)
+**✅ Routes génériques disponibles** :
+- `POST /api/games/[slug]/sessions` - Créer une session
+- `GET /api/games/[slug]/sessions/[sessionId]` - Récupérer session + scores
+- `POST /api/games/[slug]/sessions/[sessionId]/rounds` - Ajouter une manche (rounds)
+- `POST /api/games/[slug]/sessions/[sessionId]/scores` - Modifier un score (categories)
+
+**❌ NE JAMAIS créer de routes spécifiques** comme `/api/games/tarot/sessions`
 
 ### Système de création harmonisé
 

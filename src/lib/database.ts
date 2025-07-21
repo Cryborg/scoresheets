@@ -179,12 +179,13 @@ async function seedInitialData(): Promise<void> {
     `);
   }
 
-  // Check if we already have games
-  const existingGames = await tursoClient.execute('SELECT COUNT(*) as count FROM games');
-  const gameCount = existingGames.rows[0]?.count as number || 0;
-
-  if (gameCount === 0) {
-    // Add Yams
+  // Ensure Yams exists
+  const existingYams = await tursoClient.execute({
+    sql: 'SELECT id FROM games WHERE slug = ?',
+    args: ['yams']
+  });
+  
+  if (existingYams.rows.length === 0) {
     await tursoClient.execute(`
       INSERT INTO games (name, slug, category_id, rules, is_implemented, score_type, team_based, min_players, max_players, score_direction)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -200,8 +201,16 @@ async function seedInitialData(): Promise<void> {
       6, // max_players
       'higher'
     ]);
+    console.log('✅ Yams game added');
+  }
 
-    // Add Belote
+  // Ensure Belote exists
+  const existingBelote = await tursoClient.execute({
+    sql: 'SELECT id FROM games WHERE slug = ?',
+    args: ['belote']
+  });
+  
+  if (existingBelote.rows.length === 0) {
     await tursoClient.execute(`
       INSERT INTO games (name, slug, category_id, rules, is_implemented, score_type, team_based, min_players, max_players, score_direction)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -217,14 +226,17 @@ async function seedInitialData(): Promise<void> {
       4, // max_players
       'higher'
     ]);
+    console.log('✅ Belote game added');
   }
 
-  // Create admin user if it doesn't exist
+  // Create admin user if it doesn't exist, or update existing user to admin
   const existingAdmin = await tursoClient.execute({
-    sql: 'SELECT id FROM users WHERE email = ?', 
+    sql: 'SELECT id, is_admin FROM users WHERE email = ?', 
     args: ['cryborg.live@gmail.com']
   });
+  
   if (existingAdmin.rows.length === 0) {
+    // Create new admin user
     const bcrypt = await import('bcrypt');
     const hashedPassword = await bcrypt.hash('Célibataire1979$', 10);
     
@@ -232,6 +244,17 @@ async function seedInitialData(): Promise<void> {
       sql: `INSERT INTO users (username, email, password_hash, is_admin) VALUES (?, ?, ?, ?)`,
       args: ['Admin', 'cryborg.live@gmail.com', hashedPassword, 1]
     });
+    console.log('✅ Admin user created');
+  } else {
+    // User exists, ensure admin rights
+    const user = existingAdmin.rows[0];
+    if (!user.is_admin) {
+      await tursoClient.execute({
+        sql: 'UPDATE users SET is_admin = ? WHERE email = ?',
+        args: [1, 'cryborg.live@gmail.com']
+      });
+      console.log('✅ Admin rights granted to existing user');
+    }
   }
 }
 

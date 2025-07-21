@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
+import ThemeToggle from '@/components/ThemeToggle';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -67,6 +68,9 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+      <div className="absolute top-4 right-4">
+        <ThemeToggle />
+      </div>
       <div className="max-w-md w-full space-y-8">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
@@ -89,9 +93,14 @@ export default function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 className={`appearance-none rounded-none relative block w-full px-3 py-2 border rounded-t-md focus:outline-none focus:z-10 sm:text-sm ${
                   theme === 'dark' 
-                    ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
-                    : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                    ? '!bg-gray-700 !border-gray-600 !text-white placeholder-gray-400' 
+                    : '!bg-white !border-gray-300 !text-gray-900 placeholder-gray-500'
                 }`}
+                style={{
+                  backgroundColor: theme === 'dark' ? '#374151' : '#ffffff',
+                  borderColor: theme === 'dark' ? '#4b5563' : '#d1d5db',
+                  color: theme === 'dark' ? '#ffffff' : '#111827',
+                }}
                 placeholder="Adresse email"
               />
             </div>
@@ -103,9 +112,14 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 className={`appearance-none rounded-none relative block w-full px-3 py-2 border rounded-b-md focus:outline-none focus:z-10 sm:text-sm ${
                   theme === 'dark' 
-                    ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
-                    : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                    ? '!bg-gray-700 !border-gray-600 !text-white placeholder-gray-400' 
+                    : '!bg-white !border-gray-300 !text-gray-900 placeholder-gray-500'
                 }`}
+                style={{
+                  backgroundColor: theme === 'dark' ? '#374151' : '#ffffff',
+                  borderColor: theme === 'dark' ? '#4b5563' : '#d1d5db',
+                  color: theme === 'dark' ? '#ffffff' : '#111827',
+                }}
                 placeholder="Mot de passe"
               />
             </div>

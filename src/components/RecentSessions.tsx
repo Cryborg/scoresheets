@@ -9,7 +9,8 @@ import {
   Calendar, 
   Trash2, 
   ExternalLink,
-  Clock
+  Clock,
+  Loader2
 } from 'lucide-react';
 
 interface GameSession {
@@ -24,7 +25,7 @@ interface GameSession {
 
 interface RecentSessionsProps {
   sessions: GameSession[];
-  onDeleteSession: (id: number) => void;
+  onDeleteSession: (id: number) => Promise<void>;
   getGameUrl: (session: GameSession) => string;
 }
 
@@ -34,6 +35,7 @@ export default function RecentSessions({
   getGameUrl 
 }: RecentSessionsProps) {
   const [expandedGames, setExpandedGames] = useState<Set<string>>(new Set());
+  const [deletingSessionIds, setDeletingSessionIds] = useState<Set<number>>(new Set());
 
   // Ensure sessions is an array
   const sessionsArray = Array.isArray(sessions) ? sessions : [];
@@ -56,6 +58,19 @@ export default function RecentSessions({
       newExpanded.add(gameName);
     }
     setExpandedGames(newExpanded);
+  };
+
+  const handleDeleteSession = async (sessionId: number) => {
+    setDeletingSessionIds(prev => new Set(prev).add(sessionId));
+    try {
+      await onDeleteSession(sessionId);
+    } finally {
+      setDeletingSessionIds(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(sessionId);
+        return newSet;
+      });
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -162,11 +177,16 @@ export default function RecentSessions({
                         <ExternalLink className="h-4 w-4" />
                       </Link>
                       <button
-                        onClick={() => onDeleteSession(session.id)}
-                        className="p-2 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
+                        onClick={() => handleDeleteSession(session.id)}
+                        disabled={deletingSessionIds.has(session.id)}
+                        className="p-2 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 disabled:opacity-50 disabled:cursor-not-allowed"
                         title="Supprimer la partie"
                       >
-                        <Trash2 className="h-4 w-4" />
+                        {deletingSessionIds.has(session.id) ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Trash2 className="h-4 w-4" />
+                        )}
                       </button>
                     </div>
                   </div>

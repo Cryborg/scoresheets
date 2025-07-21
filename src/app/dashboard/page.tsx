@@ -83,7 +83,10 @@ export default function DashboardPage() {
     }
   };
 
-  const deleteSession = async (sessionId: number, sessionName: string) => {
+  const deleteSession = async (sessionId: number) => {
+    const session = sessions.find(s => s.id === sessionId);
+    const sessionName = session?.session_name || 'cette partie';
+    
     if (!confirm(`Êtes-vous sûr de vouloir supprimer la partie "${sessionName}" ?`)) {
       return;
     }
@@ -170,7 +173,7 @@ export default function DashboardPage() {
               {/* Recent Sessions */}
               <RecentSessions 
                 sessions={sessions}
-                onDeleteSession={(id) => deleteSession(id, 'cette partie')}
+                onDeleteSession={deleteSession}
                 getGameUrl={getGameUrl}
               />
             </div>

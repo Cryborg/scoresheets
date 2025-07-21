@@ -28,7 +28,7 @@ export async function GET() {
     const games = result.rows;
 
     console.log('API /api/games: Found games:', games.length);
-    console.log('API /api/games: Game slugs:', games.map((g: any) => g.slug));
+    console.log('API /api/games: Game slugs:', games.map((g) => (g as { slug: string }).slug));
     return NextResponse.json({ games });
   } catch (error) {
     console.error('API /api/games: Error fetching games:', error);

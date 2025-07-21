@@ -30,6 +30,9 @@ const specificComponents: Record<string, ComponentType<ScoreSheetProps>> = {
   'tarot': dynamic(() => import('@/components/scoresheets/TarotScoreSheet'), {
     loading: LoadingComponent
   }),
+  'bridge': dynamic(() => import('@/components/scoresheets/BridgeScoreSheet'), {
+    loading: LoadingComponent
+  }),
 };
 
 /**

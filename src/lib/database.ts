@@ -262,6 +262,31 @@ async function seedInitialData(): Promise<void> {
     console.log('✅ Tarot game added');
   }
 
+  // Ensure Bridge exists
+  const existingBridge = await tursoClient.execute({
+    sql: 'SELECT id FROM games WHERE slug = ?',
+    args: ['bridge']
+  });
+  
+  if (existingBridge.rows.length === 0) {
+    await tursoClient.execute(`
+      INSERT INTO games (name, slug, category_id, rules, is_implemented, score_type, team_based, min_players, max_players, score_direction)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `, [
+      'Bridge',
+      'bridge',
+      1, // Jeux de cartes
+      'Jeu de cartes avec enchères et contrats. Se joue à 4 joueurs en 2 équipes. Objectif: réaliser le contrat annoncé avec les levées.',
+      1, // is_implemented
+      'rounds',
+      1, // team_based
+      4, // min_players
+      4, // max_players
+      'higher'
+    ]);
+    console.log('✅ Bridge game added');
+  }
+
   // Create admin user if it doesn't exist, or update existing user to admin
   const adminEmail = process.env.ADMIN_EMAIL;
   const adminPassword = process.env.ADMIN_PASSWORD;

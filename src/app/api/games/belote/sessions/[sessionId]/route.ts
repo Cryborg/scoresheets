@@ -47,32 +47,17 @@ export async function GET(
       SELECT 
         round_number,
         details,
-        GROUP_CONCAT(
-          CASE 
-            WHEN players.position IN (0, 2) THEN score_value 
-            ELSE NULL 
-          END
-        ) as team1_scores,
-        GROUP_CONCAT(
-          CASE 
-            WHEN players.position IN (1, 3) THEN score_value 
-            ELSE NULL 
-          END
-        ) as team2_scores
+        SUM(CASE WHEN players.position IN (0, 2) THEN score_value ELSE 0 END) as team1_total,
+        SUM(CASE WHEN players.position IN (1, 3) THEN score_value ELSE 0 END) as team2_total
       FROM scores
-      LEFT JOIN players ON scores.player_id = players.id
+      JOIN players ON scores.player_id = players.id
       WHERE scores.session_id = ?
-      GROUP BY round_number
+      GROUP BY round_number, details
       ORDER BY round_number
     `).all(sessionId);
 
     // Transform rounds data
-    const rounds = roundsData.map((round: { round_number: number; details: string | null; team1_scores: string | null; team2_scores: string | null }) => {
-      const team1Scores = round.team1_scores ? round.team1_scores.split(',').map((s: string) => parseInt(s) || 0) : [0, 0];
-      const team2Scores = round.team2_scores ? round.team2_scores.split(',').map((s: string) => parseInt(s) || 0) : [0, 0];
-      
-      const team1Total = team1Scores.reduce((sum: number, score: number) => sum + score, 0);
-      const team2Total = team2Scores.reduce((sum: number, score: number) => sum + score, 0);
+    const rounds = roundsData.map((round: { round_number: number; details: string | null; team1_total: number; team2_total: number }) => {
 
       let details = null;
       try {
@@ -84,8 +69,8 @@ export async function GET(
       return {
         round_number: round.round_number,
         team_scores: {
-          0: team1Total,
-          1: team2Total
+          0: round.team1_total || 0,
+          1: round.team2_total || 0
         },
         details
       };

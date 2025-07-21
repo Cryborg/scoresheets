@@ -87,12 +87,11 @@ export default function LoginPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border rounded-t-md focus:outline-none focus:z-10 sm:text-sm"
-                style={{
-                  backgroundColor: theme === 'dark' ? '#374151' : '#ffffff',
-                  borderColor: theme === 'dark' ? '#4b5563' : '#d1d5db',
-                  color: theme === 'dark' ? '#ffffff' : '#111827',
-                }}
+                className={`appearance-none rounded-none relative block w-full px-3 py-2 border rounded-t-md focus:outline-none focus:z-10 sm:text-sm ${
+                  theme === 'dark' 
+                    ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                    : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                }`}
                 placeholder="Adresse email"
               />
             </div>
@@ -102,12 +101,11 @@ export default function LoginPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border rounded-b-md focus:outline-none focus:z-10 sm:text-sm"
-                style={{
-                  backgroundColor: theme === 'dark' ? '#374151' : '#ffffff',
-                  borderColor: theme === 'dark' ? '#4b5563' : '#d1d5db',
-                  color: theme === 'dark' ? '#ffffff' : '#111827',
-                }}
+                className={`appearance-none rounded-none relative block w-full px-3 py-2 border rounded-b-md focus:outline-none focus:z-10 sm:text-sm ${
+                  theme === 'dark' 
+                    ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                    : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                }`}
                 placeholder="Mot de passe"
               />
             </div>

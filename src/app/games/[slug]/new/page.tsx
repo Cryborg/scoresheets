@@ -48,8 +48,8 @@ export default function NewGamePage() {
         setGame(foundGame);
         initializePlayers(foundGame);
       }
-    } catch (error) {
-      console.error('Error fetching game:', error);
+    } catch (err) {
+      console.error('Error fetching game:', err);
       router.push('/dashboard');
     } finally {
       setLoading(false);
@@ -141,7 +141,7 @@ export default function NewGamePage() {
         const data = await response.json();
         alert(data.error || 'Erreur lors de la création');
       }
-    } catch (error) {
+    } catch {
       alert('Erreur de connexion');
     } finally {
       setSaving(false);

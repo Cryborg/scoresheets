@@ -34,7 +34,7 @@ export function useOptimisticSave<T>(options: OptimisticSaveOptions<T>) {
         }
       }
       // ✅ Success - optimistic update is already applied
-    } catch (error) {
+    } catch {
       // 🚨 Revert on network error
       onRevert();
       

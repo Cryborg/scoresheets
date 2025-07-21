@@ -47,8 +47,8 @@ export default function NewGenericSessionPage() {
         const playerNames = (data.players || []).map((player: { player_name: string }) => player.player_name);
         setSuggestedPlayers(playerNames);
       }
-    } catch (error) {
-      console.error('Error fetching players:', error);
+    } catch (err) {
+      console.error('Error fetching players:', err);
     }
   };
 
@@ -109,7 +109,7 @@ export default function NewGenericSessionPage() {
         const errorData = await response.json();
         alert(errorData.error || 'Erreur lors de la création de la partie');
       }
-    } catch (error) {
+    } catch {
       alert('Erreur de connexion');
     } finally {
       setLoading(false);

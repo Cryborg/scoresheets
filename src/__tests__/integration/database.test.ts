@@ -16,7 +16,7 @@ let testDb: Database.Database;
 jest.mock('../../lib/database', () => {
   return {
     db: {
-      execute: async (sql: string | { sql: string; args: any[] }) => {
+      execute: async (sql: string | { sql: string; args: unknown[] }) => {
         const actualSql = typeof sql === 'string' ? sql : sql.sql;
         const args = typeof sql === 'string' ? [] : (sql.args || []);
         
@@ -67,6 +67,7 @@ describe('Database Integration Tests', () => {
 
   beforeEach(async () => {
     // Initialize database schema manually for test
+    // @ts-expect-error - SQLite syntax not recognized by PhpStorm
     testDb.exec(`
       CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -167,6 +168,7 @@ describe('Database Integration Tests', () => {
   afterEach(() => {
     // Clean up data after each test
     try {
+      // @ts-expect-error - SQLite syntax not recognized by PhpStorm
       testDb.exec(`
         DELETE FROM scores;
         DELETE FROM players;

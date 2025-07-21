@@ -43,7 +43,7 @@ export default function RegisterPage() {
       } else {
         setError(data.error || 'Une erreur est survenue');
       }
-    } catch (error) {
+    } catch {
       setError('Erreur de connexion');
     } finally {
       setLoading(false);

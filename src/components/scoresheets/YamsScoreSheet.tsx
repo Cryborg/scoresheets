@@ -86,8 +86,8 @@ export default function YamsScoreSheet({ sessionId }: YamsScoreSheetProps) {
       } else if (response.status === 404) {
         router.push('/dashboard');
       }
-    } catch (error) {
-      console.error('Error fetching session:', error);
+    } catch (err) {
+      console.error('Error fetching session:', err);
     } finally {
       setLoading(false);
     }
@@ -182,7 +182,7 @@ export default function YamsScoreSheet({ sessionId }: YamsScoreSheetProps) {
         alert(data.error || 'Erreur lors de la sauvegarde - score annulé');
       }
       // ✅ Success - no action needed, optimistic update is already done
-    } catch (error) {
+    } catch {
       // 🚨 Network error - revert optimistic update
       setSession(prev => {
         if (!prev) return prev;

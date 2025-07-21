@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import ThemeToggle from '@/components/ThemeToggle';
+import { LogIn, Mail, Lock } from 'lucide-react';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -14,7 +15,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
-  const { theme } = useTheme();
+  useTheme();
   const { login } = useAuth();
 
   useEffect(() => {
@@ -67,78 +68,113 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-      <div className="absolute top-4 right-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800">
+      {/* Theme Toggle */}
+      <div className="absolute top-6 right-6 z-10">
         <ThemeToggle />
       </div>
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
-            Connexion
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
-            Ou{' '}
-            <Link href="/auth/register" className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400">
-              créer un nouveau compte
-            </Link>
-          </p>
+
+      {/* Main Content */}
+      <div className="flex items-center justify-center min-h-screen p-6">
+        <div className="w-full max-w-md">
+          {/* Header Card */}
+          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-2xl border border-gray-200/50 dark:border-gray-700/50 p-8 shadow-xl hover:shadow-2xl transition-all duration-300 mb-6">
+            <div className="text-center">
+              {/* Icon */}
+              <div className="mx-auto w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mb-6 shadow-lg">
+                <LogIn className="h-8 w-8 text-white" />
+              </div>
+              
+              {/* Title */}
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                Bienvenue !
+              </h1>
+              <p className="text-gray-600 dark:text-gray-400">
+                Connectez-vous à votre espace personnel
+              </p>
+            </div>
+          </div>
+
+          {/* Login Form Card */}
+          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-2xl border border-gray-200/50 dark:border-gray-700/50 p-8 shadow-xl hover:shadow-2xl transition-all duration-300">
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Email Input */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center">
+                  <Mail className="h-4 w-4 mr-2" />
+                  Adresse email
+                </label>
+                <input
+                  type="email"
+                  required
+                  autoComplete="off"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl bg-white/50 dark:bg-gray-800/50 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-sm hover:shadow-md focus:shadow-lg backdrop-blur-sm"
+                  placeholder="votre@email.com"
+                />
+              </div>
+
+              {/* Password Input */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center">
+                  <Lock className="h-4 w-4 mr-2" />
+                  Mot de passe
+                </label>
+                <input
+                  type="password"
+                  required
+                  autoComplete="off"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl bg-white/50 dark:bg-gray-800/50 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-sm hover:shadow-md focus:shadow-lg backdrop-blur-sm"
+                  placeholder="••••••••"
+                />
+              </div>
+
+              {/* Error Message */}
+              {error && (
+                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4">
+                  <p className="text-red-600 dark:text-red-400 text-sm text-center font-medium">
+                    {error}
+                  </p>
+                </div>
+              )}
+
+              {/* Submit Button */}
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              >
+                {loading ? (
+                  <div className="flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
+                    Connexion...
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center">
+                    <LogIn className="h-5 w-5 mr-2" />
+                    Se connecter
+                  </div>
+                )}
+              </button>
+            </form>
+          </div>
+
+          {/* Register Link Card */}
+          <div className="text-center mt-6">
+            <p className="text-gray-600 dark:text-gray-400">
+              Pas encore de compte ?{' '}
+              <Link 
+                href="/auth/register" 
+                className="font-semibold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 transition-all duration-200"
+              >
+                Créer un compte
+              </Link>
+            </p>
+          </div>
         </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="rounded-md shadow-sm -space-y-px">
-            <div>
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className={`appearance-none rounded-none relative block w-full px-3 py-2 border rounded-t-md focus:outline-none focus:z-10 sm:text-sm ${
-                  theme === 'dark' 
-                    ? '!bg-gray-700 !border-gray-600 !text-white placeholder-gray-400' 
-                    : '!bg-white !border-gray-300 !text-gray-900 placeholder-gray-500'
-                }`}
-                style={{
-                  backgroundColor: theme === 'dark' ? '#374151' : '#ffffff',
-                  borderColor: theme === 'dark' ? '#4b5563' : '#d1d5db',
-                  color: theme === 'dark' ? '#ffffff' : '#111827',
-                }}
-                placeholder="Adresse email"
-              />
-            </div>
-            <div>
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className={`appearance-none rounded-none relative block w-full px-3 py-2 border rounded-b-md focus:outline-none focus:z-10 sm:text-sm ${
-                  theme === 'dark' 
-                    ? '!bg-gray-700 !border-gray-600 !text-white placeholder-gray-400' 
-                    : '!bg-white !border-gray-300 !text-gray-900 placeholder-gray-500'
-                }`}
-                style={{
-                  backgroundColor: theme === 'dark' ? '#374151' : '#ffffff',
-                  borderColor: theme === 'dark' ? '#4b5563' : '#d1d5db',
-                  color: theme === 'dark' ? '#ffffff' : '#111827',
-                }}
-                placeholder="Mot de passe"
-              />
-            </div>
-          </div>
-
-          {error && (
-            <div className="text-red-600 text-sm text-center">{error}</div>
-          )}
-
-          <div>
-            <button
-              type="submit"
-              disabled={loading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
-            >
-              {loading ? 'Connexion...' : 'Se connecter'}
-            </button>
-          </div>
-        </form>
       </div>
     </div>
   );

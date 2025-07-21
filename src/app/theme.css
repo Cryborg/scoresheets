@@ -1,131 +1,229 @@
-/* Light theme */
+/* ============================================
+   THEME SYSTEM WITH CSS CUSTOM PROPERTIES
+   ============================================ */
+
+/* Default theme (light) variables */
+:root {
+  /* Background colors */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f9fafb;
+  --bg-tertiary: #f3f4f6;
+  --bg-hover: #f5f5f5;
+  
+  /* Text colors */
+  --text-primary: #111827;
+  --text-secondary: #6b7280;
+  --text-tertiary: #9ca3af;
+  
+  /* Border colors */
+  --border-primary: #d1d5db;
+  --border-secondary: #e5e7eb;
+  
+  /* Form colors */
+  --input-bg: #ffffff;
+  --input-border: #d1d5db;
+  --input-text: #111827;
+  --input-placeholder: #6b7280;
+  --input-focus-border: #d1d5db;
+  
+  /* Force browser color scheme */
+  color-scheme: light;
+}
+
+/* Dark theme variables */
+html.dark {
+  /* Background colors */
+  --bg-primary: #0f0f0f;
+  --bg-secondary: #1a1a1a;
+  --bg-tertiary: #2d2d2d;
+  --bg-hover: #374151;
+  
+  /* Text colors */
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-tertiary: #94a3b8;
+  
+  /* Border colors */
+  --border-primary: #374151;
+  --border-secondary: #4b5563;
+  
+  /* Form colors */
+  --input-bg: #2d2d2d;
+  --input-border: #2d2d2d;
+  --input-text: #f8fafc;
+  --input-placeholder: #9ca3af;
+  --input-focus-border: #2d2d2d;
+  
+  /* Force browser color scheme */
+  color-scheme: dark;
+}
+
+/* ============================================
+   SEMANTIC CLASSES USING VARIABLES
+   ============================================ */
+
+/* Page backgrounds */
+.bg-primary { background-color: var(--bg-primary); }
+.bg-secondary { background-color: var(--bg-secondary); }
+.bg-tertiary { background-color: var(--bg-tertiary); }
+
+/* Text colors */
+.text-primary { color: var(--text-primary); }
+.text-secondary { color: var(--text-secondary); }
+
+/* Borders */
+.border-primary { border-color: var(--border-primary); }
+
+/* ============================================
+   FORM INPUTS - CLEAN & SIMPLE
+   ============================================ */
+
+/* Base input styling */
+input[type="text"],
+input[type="email"], 
+input[type="password"],
+input[type="number"],
+select,
+textarea {
+  background-color: var(--input-bg) !important;
+  border-color: var(--input-border) !important;
+  color: var(--input-text) !important;
+  -webkit-text-fill-color: var(--input-text) !important;
+}
+
+/* Placeholder styling */
+input[type="text"]::placeholder,
+input[type="email"]::placeholder,
+input[type="password"]::placeholder,
+input[type="number"]::placeholder,
+textarea::placeholder {
+  color: var(--input-placeholder) !important;
+  opacity: 1 !important;
+  -webkit-text-fill-color: var(--input-placeholder) !important;
+}
+
+/* Focus states */
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+input[type="number"]:focus,
+select:focus,
+textarea:focus {
+  background-color: var(--input-bg) !important;
+  border-color: var(--input-focus-border) !important;
+  --tw-ring-opacity: 0 !important;
+  --tw-ring-color: transparent !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/* ============================================
+   BROWSER AUTOFILL OVERRIDE
+   ============================================ */
+
+/* Webkit autofill */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px var(--input-bg) inset !important;
+  -webkit-text-fill-color: var(--input-text) !important;
+  border-color: var(--input-border) !important;
+}
+
+/* ============================================
+   TAILWIND CSS OVERRIDES
+   ============================================ */
+
+/* Override default Tailwind colors with our semantic ones */
 html:not(.dark) {
   --tw-bg-opacity: 1;
-  background-color: rgb(255 255 255 / var(--tw-bg-opacity));
+  background-color: var(--bg-primary);
 }
 
 html:not(.dark) .bg-gray-50 {
   --tw-bg-opacity: 1;
-  background-color: rgb(249 250 251 / var(--tw-bg-opacity));
+  background-color: var(--bg-secondary);
 }
 
 html:not(.dark) .bg-gray-100 {
   --tw-bg-opacity: 1;
-  background-color: rgb(243 244 246 / var(--tw-bg-opacity));
+  background-color: var(--bg-tertiary);
 }
 
 html:not(.dark) .bg-white {
   --tw-bg-opacity: 1;
-  background-color: rgb(255 255 255 / var(--tw-bg-opacity));
+  background-color: var(--bg-primary);
 }
 
 html:not(.dark) .text-gray-900 {
   --tw-text-opacity: 1;
-  color: rgb(17 24 39 / var(--tw-text-opacity));
+  color: var(--text-primary);
 }
 
-/* Hover states in light mode - visible but not too dark */
-html:not(.dark) .hover\:bg-gray-50:hover {
-  --tw-bg-opacity: 1;
-  background-color: rgb(245 245 245 / var(--tw-bg-opacity)) !important;
-}
-
-/* Dark theme */
+/* Dark theme Tailwind overrides */
 html.dark {
   --tw-bg-opacity: 1;
-  background-color: rgb(15 15 15 / var(--tw-bg-opacity));
+  background-color: var(--bg-primary);
 }
 
 html.dark .bg-gray-50,
 html.dark .dark\:bg-gray-900 {
   --tw-bg-opacity: 1;
-  background-color: rgb(15 15 15 / var(--tw-bg-opacity));
+  background-color: var(--bg-primary);
 }
 
 html.dark .bg-white,
 html.dark .dark\:bg-gray-800 {
   --tw-bg-opacity: 1;
-  background-color: rgb(26 26 26 / var(--tw-bg-opacity));
+  background-color: var(--bg-secondary);
 }
 
 html.dark .bg-gray-100,
 html.dark .dark\:bg-gray-700 {
   --tw-bg-opacity: 1;
-  background-color: rgb(45 45 45 / var(--tw-bg-opacity));
+  background-color: var(--bg-tertiary);
 }
 
 html.dark .text-gray-900,
 html.dark .dark\:text-white {
   --tw-text-opacity: 1;
-  color: rgb(248 250 252 / var(--tw-text-opacity));
+  color: var(--text-primary);
 }
 
 html.dark .text-gray-700,
 html.dark .dark\:text-gray-300 {
   --tw-text-opacity: 1;
-  color: rgb(203 213 225 / var(--tw-text-opacity));
+  color: var(--text-secondary);
 }
 
 html.dark .text-gray-600,
 html.dark .dark\:text-gray-400 {
   --tw-text-opacity: 1;
-  color: rgb(148 163 184 / var(--tw-text-opacity));
+  color: var(--text-tertiary);
 }
 
 html.dark .border-gray-200,
 html.dark .dark\:border-gray-600 {
   --tw-border-opacity: 1;
-  border-color: rgb(45 45 45 / var(--tw-border-opacity));
+  border-color: var(--border-primary);
 }
 
-/* Input fields in dark mode */
-html.dark input[type="text"],
-html.dark input[type="email"],
-html.dark input[type="password"],
-html.dark input[type="number"],
-html.dark input.dark\:bg-gray-800,
-html.dark .dark\:bg-gray-800 input,
-html.dark input.dark\:bg-gray-700,
-html.dark .dark\:bg-gray-700 input {
+/* Hover states */
+html:not(.dark) .hover\:bg-gray-50:hover {
   --tw-bg-opacity: 1;
-  background-color: rgb(31 41 55 / var(--tw-bg-opacity));
-  --tw-text-opacity: 1;
-  color: rgb(248 250 252 / var(--tw-text-opacity));
+  background-color: var(--bg-hover) !important;
 }
 
-html.dark input[type="text"]:focus,
-html.dark input[type="email"]:focus,
-html.dark input[type="password"]:focus,
-html.dark input[type="number"]:focus {
-  --tw-bg-opacity: 1;
-  background-color: rgb(31 41 55 / var(--tw-bg-opacity));
-}
-
-/* Select and textarea elements */
-html.dark select,
-html.dark textarea,
-html.dark select.dark\:bg-gray-800,
-html.dark select.dark\:bg-gray-700,
-html.dark textarea.dark\:bg-gray-800,
-html.dark textarea.dark\:bg-gray-700 {
-  --tw-bg-opacity: 1;
-  background-color: rgb(31 41 55 / var(--tw-bg-opacity));
-  --tw-text-opacity: 1;
-  color: rgb(248 250 252 / var(--tw-text-opacity));
-}
-
-/* Placeholder text in dark mode */
-html.dark input::placeholder,
-html.dark textarea::placeholder {
-  --tw-text-opacity: 1;
-  color: rgb(107 114 128 / var(--tw-text-opacity));
-}
+/* ============================================
+   COMPONENT-SPECIFIC OVERRIDES  
+   ============================================ */
 
 /* Checkbox and radio buttons */
 html.dark input[type="checkbox"],
 html.dark input[type="radio"] {
   --tw-bg-opacity: 1;
-  background-color: rgb(31 41 55 / var(--tw-bg-opacity));
+  background-color: var(--bg-tertiary);
   --tw-border-opacity: 1;
-  border-color: rgb(75 85 99 / var(--tw-border-opacity));
+  border-color: var(--border-primary);
 }
